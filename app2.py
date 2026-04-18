@@ -2,187 +2,155 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="3D Lithography Simulator", layout="wide")
+st.set_page_config(page_title="Lithography Simulator", layout="wide")
 
 # -------------------------------
-# FUNCTIONS
+# BLOCK WITH PROPER FACES
 # -------------------------------
+def create_block(x0, y0, dx, dy, z0, dz, color):
+    x = [x0, x0+dx, x0+dx, x0, x0, x0+dx, x0+dx, x0]
+    y = [y0, y0, y0+dy, y0+dy, y0, y0, y0+dy, y0+dy]
+    z = [z0, z0, z0, z0, z0+dz, z0+dz, z0+dz, z0+dz]
 
-def rpm_from_thickness(thickness, material):
-    if material == "AZ1505":
-        return int(3000 * (500 / thickness))
-    elif material == "PMMA":
-        return int(4000 * (300 / thickness))
-
-def generate_mask(mask_type, size=50):
-    mask = np.zeros((size, size))
-
-    if mask_type == "Lines":
-        mask[:, ::5] = 1
-    elif mask_type == "Dots":
-        for i in range(0, size, 10):
-            for j in range(0, size, 10):
-                mask[i:i+2, j:j+2] = 1
-    elif mask_type == "Square":
-        mask[15:35, 15:35] = 1
-
-    return mask
-
-# -------------------------------
-# CREATE SOLID BLOCK
-# -------------------------------
-
-def create_block(z_start, thickness, color):
-    x = [0, 1, 1, 0, 0, 1, 1, 0]
-    y = [0, 0, 1, 1, 0, 0, 1, 1]
-    z = [
-        z_start, z_start, z_start, z_start,
-        z_start + thickness, z_start + thickness,
-        z_start + thickness, z_start + thickness
-    ]
+    i = [0,0,0,1,1,2,4,4,5,6,3,2]
+    j = [1,2,3,2,5,3,5,6,6,7,7,6]
+    k = [2,3,1,5,6,7,6,7,4,4,4,7]
 
     return go.Mesh3d(
         x=x, y=y, z=z,
+        i=i, j=j, k=k,
         color=color,
         opacity=1.0,
         flatshading=True
     )
 
 # -------------------------------
-# CREATE PATTERNED RESIST
+# MASK
 # -------------------------------
+def generate_mask(size, pattern):
+    mask = np.zeros((size, size))
 
-def create_patterned_resist(z_start, resist, mask):
-    size = resist.shape[0]
-    fig_data = []
+    if pattern == "Lines":
+        mask[:, ::4] = 1
+    elif pattern == "Dots":
+        for i in range(0, size, 6):
+            for j in range(0, size, 6):
+                mask[i:i+2, j:j+2] = 1
+    elif pattern == "Square":
+        mask[10:20, 10:20] = 1
 
-    for i in range(size):
-        for j in range(size):
-            if resist[i, j] > 0:
-                if mask[i, j] == 0:  # only keep non-developed areas
-                    x0, y0 = i/size, j/size
-                    dx = 1/size
-
-                    fig_data.append(go.Mesh3d(
-                        x=[x0, x0+dx, x0+dx, x0, x0, x0+dx, x0+dx, x0],
-                        y=[y0, y0, y0+dx, y0+dx, y0, y0, y0+dx, y0+dx],
-                        z=[
-                            z_start, z_start, z_start, z_start,
-                            z_start + resist[i, j], z_start + resist[i, j],
-                            z_start + resist[i, j], z_start + resist[i, j]
-                        ],
-                        color="green",
-                        opacity=1.0,
-                        flatshading=True,
-                        showscale=False
-                    ))
-
-    return fig_data
+    return mask
 
 # -------------------------------
-# SIDEBAR
+# APP
 # -------------------------------
 
-tab = st.sidebar.radio("Navigation", ["Simulation", "Theory"])
+st.title("3D Lithography Simulator (Fixed Solid Model)")
+
+size = 15  # keep small for performance
+dx = 1 / size
 
 # -------------------------------
-# THEORY
+# STEP 0: SUBSTRATE
 # -------------------------------
+st.header("Step 0: Silicon Substrate")
 
-if tab == "Theory":
-    st.title("Lithography Theory")
+fig0 = go.Figure()
+fig0.add_trace(create_block(0,0,1,1,0,200,"gray"))
 
-    st.markdown("""
-    This simulator shows lithography as **solid 3D layers**:
-
-    - Gray → Silicon substrate  
-    - Blue → SiO₂  
-    - Orange → Photoresist  
-    - Green → Developed pattern  
-
-    Unlike simple surface plots, this uses **true volumetric blocks**.
-    """)
+st.plotly_chart(fig0, use_container_width=True)
 
 # -------------------------------
-# SIMULATION
+# STEP 1: SiO2
 # -------------------------------
+st.header("Step 1: SiO₂ Deposition")
 
-else:
-    st.title("3D Lithography Simulator (Solid Model)")
+sio2_thickness = st.slider("SiO₂ Thickness", 100, 500, 200)
 
-    size = 30  # reduced for performance
+fig1 = go.Figure()
+fig1.add_trace(create_block(0,0,1,1,0,200,"gray"))
+fig1.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
 
-    # -------------------------------
-    # STEP 0: SUBSTRATE
-    # -------------------------------
-    st.header("Step 0: Silicon Substrate")
+st.plotly_chart(fig1, use_container_width=True)
 
-    substrate_thickness = 200
+# -------------------------------
+# STEP 2: PHOTORESIST
+# -------------------------------
+st.header("Step 2: Photoresist Coating")
 
-    fig0 = go.Figure()
-    fig0.add_trace(create_block(0, substrate_thickness, "gray"))
+resist_thickness = st.slider("Resist Thickness", 100, 500, 200)
 
-    st.plotly_chart(fig0, use_container_width=True)
+fig2 = go.Figure()
+fig2.add_trace(create_block(0,0,1,1,0,200,"gray"))
+fig2.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
+fig2.add_trace(create_block(0,0,1,1,200+sio2_thickness,resist_thickness,"orange"))
 
-    # -------------------------------
-    # STEP 1: SiO2
-    # -------------------------------
-    st.header("Step 1: SiO₂ Deposition")
+st.plotly_chart(fig2, use_container_width=True)
 
-    sio2_thickness = st.slider("SiO₂ Thickness", 100, 1000, 300)
+# -------------------------------
+# STEP 3: EXPOSURE
+# -------------------------------
+st.header("Step 3: Exposure (UV Light)")
 
-    fig1 = go.Figure()
-    fig1.add_trace(create_block(0, substrate_thickness, "gray"))
-    fig1.add_trace(create_block(substrate_thickness, sio2_thickness, "blue"))
+pattern = st.selectbox("Mask Pattern", ["Lines", "Dots", "Square"])
+mask = generate_mask(size, pattern)
 
-    st.plotly_chart(fig1, use_container_width=True)
+fig3 = go.Figure()
 
-    # -------------------------------
-    # STEP 2: PHOTORESIST
-    # -------------------------------
-    st.header("Step 2: Photoresist")
+# base layers
+fig3.add_trace(create_block(0,0,1,1,0,200,"gray"))
+fig3.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
 
-    resist_type = st.selectbox("Resist", ["AZ1505", "PMMA"])
-    resist_thickness = st.slider("Resist Thickness", 100, 1000, 500)
+# PR blocks (color change if exposed)
+for i in range(size):
+    for j in range(size):
+        x0, y0 = i*dx, j*dx
+        color = "red" if mask[i,j] == 1 else "orange"
 
-    rpm = rpm_from_thickness(resist_thickness, resist_type)
-    st.write(f"Suggested RPM: **{rpm}**")
+        fig3.add_trace(create_block(
+            x0, y0, dx, dx,
+            200 + sio2_thickness,
+            resist_thickness,
+            color
+        ))
 
-    fig2 = go.Figure()
-    fig2.add_trace(create_block(0, substrate_thickness, "gray"))
-    fig2.add_trace(create_block(substrate_thickness, sio2_thickness, "blue"))
-    fig2.add_trace(create_block(substrate_thickness + sio2_thickness, resist_thickness, "orange"))
+        # Light beam (transparent yellow)
+        if mask[i,j] == 1:
+            fig3.add_trace(create_block(
+                x0, y0, dx, dx,
+                200 + sio2_thickness + resist_thickness,
+                200,
+                "yellow"
+            ))
 
-    st.plotly_chart(fig2, use_container_width=True)
+fig3.update_traces(opacity=0.2, selector=dict(color="yellow"))
 
-    # -------------------------------
-    # STEP 3 & 4: DEVELOPMENT
-    # -------------------------------
-    st.header("Step 3 & 4: Mask + Development")
+st.plotly_chart(fig3, use_container_width=True)
 
-    mask_type = st.selectbox("Mask", ["Lines", "Dots", "Square"])
-    polarity = st.radio("Polarity", ["Positive", "Negative"])
+# -------------------------------
+# STEP 4: DEVELOPMENT
+# -------------------------------
+st.header("Step 4: Development")
 
-    mask = generate_mask(mask_type, size)
+fig4 = go.Figure()
 
-    if polarity == "Negative":
-        mask = 1 - mask
+# base layers
+fig4.add_trace(create_block(0,0,1,1,0,200,"gray"))
+fig4.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
 
-    resist = np.ones((size, size)) * resist_thickness
+# remove exposed PR
+for i in range(size):
+    for j in range(size):
+        if mask[i,j] == 0:  # keep only unexposed
+            x0, y0 = i*dx, j*dx
 
-    fig3 = go.Figure()
-    fig3.add_trace(create_block(0, substrate_thickness, "gray"))
-    fig3.add_trace(create_block(substrate_thickness, sio2_thickness, "blue"))
+            fig4.add_trace(create_block(
+                x0, y0, dx, dx,
+                200 + sio2_thickness,
+                resist_thickness,
+                "green"
+            ))
 
-    patterned_blocks = create_patterned_resist(
-        substrate_thickness + sio2_thickness,
-        resist,
-        mask
-    )
+st.plotly_chart(fig4, use_container_width=True)
 
-    for block in patterned_blocks:
-        fig3.add_trace(block)
-
-    st.plotly_chart(fig3, use_container_width=True)
-
-    st.success("Desired lithography is successfully achieved!")
+st.success("Lithography execute successfully!")

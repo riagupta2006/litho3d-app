@@ -45,7 +45,7 @@ def generate_mask(size, pattern):
 # APP
 # -------------------------------
 
-st.title("3D Lithography Simulator (Fixed Solid Model)")
+st.title("3D Lithography Simulator")
 
 size = 15  # keep small for performance
 dx = 1 / size

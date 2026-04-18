@@ -56,8 +56,6 @@ def show_rpm_info(resist_type, thickness):
 
     rpm = int(base_rpm * (ref_thickness / thickness))
 
-    st.write(f"### Suggested RPM: **{rpm} RPM**")
-
     st.markdown("""
     **Relationship:**
     - Thickness ∝ 1 / RPM (simplified)

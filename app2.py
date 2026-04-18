@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 st.set_page_config(page_title="3D Lithography Simulator", layout="wide")
 
 # -------------------------------
-# Functions
+# FUNCTIONS
 # -------------------------------
 
 def rpm_from_thickness(thickness, material):
@@ -28,85 +28,104 @@ def generate_mask(mask_type, size=100):
 
     return mask
 
-def create_3d_plot(sio2, resist, developed=None):
-    size = sio2.shape[0]
+def create_3d_layers(substrate, sio2=None, resist=None, developed=None):
+    size = substrate.shape[0]
     x = np.linspace(0, 1, size)
     y = np.linspace(0, 1, size)
     X, Y = np.meshgrid(x, y)
 
     fig = go.Figure()
 
-    # SiO2 Layer
+    # Silicon substrate (GRAY)
     fig.add_trace(go.Surface(
-        z=sio2,
+        z=substrate,
         x=X, y=Y,
-        colorscale='Blues',
+        colorscale=[[0, "gray"], [1, "gray"]],
         showscale=False,
-        opacity=0.9,
-        name="SiO2"
+        opacity=1.0,
+        name="Silicon"
     ))
 
-    # Resist Layer
-    fig.add_trace(go.Surface(
-        z=sio2 + resist,
-        x=X, y=Y,
-        colorscale='Reds',
-        showscale=False,
-        opacity=0.8,
-        name="Photoresist"
-    ))
+    # SiO2 layer (BLUE)
+    if sio2 is not None:
+        fig.add_trace(go.Surface(
+            z=substrate + sio2,
+            x=X, y=Y,
+            colorscale=[[0, "blue"], [1, "blue"]],
+            showscale=False,
+            opacity=0.9,
+            name="SiO2"
+        ))
 
-    # Developed Pattern
+    # Photoresist (ORANGE)
+    if resist is not None:
+        fig.add_trace(go.Surface(
+            z=substrate + sio2 + resist,
+            x=X, y=Y,
+            colorscale=[[0, "orange"], [1, "orange"]],
+            showscale=False,
+            opacity=0.8,
+            name="Photoresist"
+        ))
+
+    # Developed pattern (GREEN)
     if developed is not None:
         fig.add_trace(go.Surface(
-            z=sio2 + developed,
+            z=substrate + sio2 + developed,
             x=X, y=Y,
-            colorscale='Greens',
+            colorscale=[[0, "green"], [1, "green"]],
             showscale=False,
             opacity=1.0,
-            name="Developed"
+            name="Developed Pattern"
         ))
 
     fig.update_layout(
         scene=dict(
             xaxis_title='X',
             yaxis_title='Y',
-            zaxis_title='Height'
+            zaxis_title='Height',
         ),
-        height=700
+        height=600
     )
 
     return fig
 
 # -------------------------------
-# Sidebar
+# SIDEBAR
 # -------------------------------
 
 tab = st.sidebar.radio("Navigation", ["Simulation", "Theory"])
 
 # -------------------------------
-# THEORY
+# THEORY TAB
 # -------------------------------
 
 if tab == "Theory":
-    st.title("Lithography Theory (3D View Enabled)")
+    st.title("Lithography Theory")
 
     st.markdown("""
-    This simulator visualizes lithography as stacked 3D layers:
+    ### Steps in Lithography
 
-    - **SiO₂ Layer** → Base dielectric
-    - **Photoresist Layer** → Spin-coated polymer
-    - **Exposure** → UV modifies solubility
-    - **Development** → Removes selected regions
+    **1. Silicon Substrate**
+    - Base wafer for fabrication
 
-    The 3D model helps visualize:
-    - Thickness variation
-    - Pattern transfer
-    - Surface topology after development
+    **2. SiO₂ Deposition**
+    - Insulating oxide layer
+
+    **3. Photoresist Coating**
+    - Spin coating defines thickness via RPM
+
+    **4. Mask & Exposure**
+    - UV light transfers pattern
+
+    **5. Development**
+    - Removes selected regions
+
+    This simulator shows these as stacked 3D layers.
     """)
 
 # -------------------------------
-# SIMULATION
+# SIMULATION TAB
 # -------------------------------
 
 else:
@@ -114,27 +133,50 @@ else:
 
     size = 100
 
-    # Step 1: SiO2
-    st.header("Step 1: SiO₂ Deposition")
-    sio2_thickness = st.slider("SiO₂ Thickness", 100, 1000, 300)
+    # -------------------------------
+    # STEP 0: SUBSTRATE
+    # -------------------------------
+    st.header("Step 0: Silicon Substrate")
 
+    substrate_height = 200
+    substrate = np.ones((size, size)) * substrate_height
+
+    fig0 = create_3d_layers(substrate)
+    st.plotly_chart(fig0, use_container_width=True)
+
+    # -------------------------------
+    # STEP 1: SiO2
+    # -------------------------------
+    st.header("Step 1: SiO₂ Deposition")
+
+    sio2_thickness = st.slider("SiO₂ Thickness (nm)", 100, 1000, 300)
     sio2 = np.ones((size, size)) * sio2_thickness
 
-    # Step 2: Resist
-    st.header("Step 2: Photoresist")
+    fig1 = create_3d_layers(substrate, sio2=sio2)
+    st.plotly_chart(fig1, use_container_width=True)
 
-    resist_type = st.selectbox("Resist", ["AZ1505", "PMMA"])
-    thickness = st.slider("Resist Thickness", 100, 1000, 500)
+    # -------------------------------
+    # STEP 2: PHOTORESIST
+    # -------------------------------
+    st.header("Step 2: Photoresist Coating")
+
+    resist_type = st.selectbox("Photoresist Type", ["AZ1505", "PMMA"])
+    thickness = st.slider("Photoresist Thickness (nm)", 100, 1000, 500)
 
     rpm = rpm_from_thickness(thickness, resist_type)
-    st.write(f"Suggested RPM: **{rpm}**")
+    st.write(f"Suggested Spin Speed: **{rpm} RPM**")
 
     resist = np.ones((size, size)) * thickness
 
-    # Step 3: Mask
-    st.header("Step 3: Mask & Exposure")
+    fig2 = create_3d_layers(substrate, sio2, resist)
+    st.plotly_chart(fig2, use_container_width=True)
 
-    mask_type = st.selectbox("Mask", ["Lines", "Dots", "Square"])
+    # -------------------------------
+    # STEP 3 & 4: MASK + DEVELOPMENT
+    # -------------------------------
+    st.header("Step 3 & 4: Mask Exposure + Development")
+
+    mask_type = st.selectbox("Mask Type", ["Lines", "Dots", "Square"])
     polarity = st.radio("Polarity", ["Positive", "Negative"])
 
     mask = generate_mask(mask_type, size)
@@ -144,9 +186,6 @@ else:
     else:
         exposed = 1 - mask
 
-    # Step 4: Development
-    st.header("Step 4: Development")
-
     developed = resist.copy()
 
     if polarity == "Positive":
@@ -154,10 +193,7 @@ else:
     else:
         developed[exposed == 0] = 0
 
-    # 3D Visualization
-    st.header("3D Visualization")
+    fig3 = create_3d_layers(substrate, sio2, resist, developed)
+    st.plotly_chart(fig3, use_container_width=True)
 
-    fig = create_3d_plot(sio2, resist, developed)
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.success("3D Pattern Generated Successfully!")
+    st.success("Simulation Complete!")

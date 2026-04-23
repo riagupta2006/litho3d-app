@@ -119,20 +119,54 @@ st.header("Step 2: Photoresist Coating")
 
 resist_type = st.selectbox("Resist Type", ["AZ1505", "PMMA"])
 
-base_rpm, ref_thickness = rpm_suggestion(resist_type)
+# base parameters
+if resist_type == "AZ1505":
+    base_rpm = 3000
+    ref_thickness = 500
+else:
+    base_rpm = 4000
+    ref_thickness = 300
 
-# NEW: RPM CONTROL (instead of thickness)
-rpm = st.slider("Spin Speed (RPM)", 1000, 6000, 3000)
+# ---- TARGET THICKNESS ----
+target_thickness = st.slider("Target Thickness (nm)", 100, 600, 200)
 
-# thickness calculation
+# ---- COMPUTE RPM RANGE FROM THICKNESS RANGE ----
+rpm_min = int(base_rpm * (ref_thickness / 600))   # thickest film → lowest rpm
+rpm_max = int(base_rpm * (ref_thickness / 100))   # thinnest film → highest rpm
+
+# ---- SUGGESTED RPM ----
+suggested_rpm = int(base_rpm * (ref_thickness / target_thickness))
+
+st.markdown(f"""
+**Suggested RPM:** `{suggested_rpm} rpm`  
+(Automatically matched to your target thickness)
+""")
+
+# ---- RPM SLIDER (NOW CONSISTENT) ----
+rpm = st.slider(
+    "Spin Speed (RPM)",
+    rpm_min,
+    rpm_max,
+    suggested_rpm
+)
+
+# ---- RESULTING THICKNESS ----
 resist_thickness = ref_thickness * (base_rpm / rpm)
 
-st.write(f"**Resulting Thickness:** {resist_thickness:.1f} nm")
+st.write(f"**Achieved Thickness:** {resist_thickness:.1f} nm")
 
+# -------------------------------
+# PLOT
+# -------------------------------
 fig2 = go.Figure()
 fig2.add_trace(create_block(0,0,1,1,0,200,"gray"))
 fig2.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
-fig2.add_trace(create_block(0,0,1,1,200+sio2_thickness,resist_thickness,"orange"))
+fig2.add_trace(create_block(
+    0,0,1,1,
+    200+sio2_thickness,
+    resist_thickness,
+    "orange"
+))
 st.plotly_chart(fig2, use_container_width=True)
 
 # -------------------------------

@@ -5,15 +5,13 @@ import plotly.graph_objects as go
 st.set_page_config(page_title="Lithography Simulator", layout="wide")
 
 # -------------------------------
-# FIXED BLOCK (PROPER SOLID 3D)
+# FIXED BLOCK (SOLID)
 # -------------------------------
 def create_block(x0, y0, dx, dy, z0, dz, color, opacity=1.0):
-    # 8 vertices
     x = [x0, x0+dx, x0+dx, x0, x0, x0+dx, x0+dx, x0]
     y = [y0, y0, y0+dy, y0+dy, y0, y0, y0+dy, y0+dy]
     z = [z0, z0, z0, z0, z0+dz, z0+dz, z0+dz, z0+dz]
 
-    # 12 triangles (2 per face)
     i = [0,0, 4,4, 0,0, 2,2, 1,1, 0,0]
     j = [1,2, 5,6, 1,5, 3,7, 2,6, 3,7]
     k = [2,3, 6,7, 5,4, 7,6, 6,5, 7,4]
@@ -27,7 +25,7 @@ def create_block(x0, y0, dx, dy, z0, dz, color, opacity=1.0):
     )
 
 # -------------------------------
-# MASK GENERATION
+# MASK
 # -------------------------------
 def generate_mask(size, pattern):
     mask = np.zeros((size, size))
@@ -44,10 +42,10 @@ def generate_mask(size, pattern):
     return mask
 
 # -------------------------------
-# RPM INFO FUNCTION
+# RPM SUGGESTION (NEW)
 # -------------------------------
-def show_rpm_info(resist_type, thickness):
-    st.subheader("Spin Coating Insights")
+def rpm_suggestion(resist_type):
+    st.subheader("Spin Coating Optimization")
 
     if resist_type == "AZ1505":
         base_rpm = 3000
@@ -56,54 +54,41 @@ def show_rpm_info(resist_type, thickness):
         base_rpm = 4000
         ref_thickness = 300
 
-    rpm = int(base_rpm * (ref_thickness / thickness))
+    target_thickness = st.slider("Target Thickness (nm)", 100, 600, 200)
 
-    st.markdown("""
-    **Relationship:**
-    - Thickness ∝ 1 / RPM (simplified)
-    - Higher RPM → thinner film  
-    - Lower RPM → thicker film  
+    suggested_rpm = int(base_rpm * (ref_thickness / target_thickness))
+
+    st.markdown(f"""
+    **Suggested RPM:** `{suggested_rpm} rpm`
+
+    📌 Based on simplified relation:
+    - Thickness ∝ 1 / RPM  
+    - Higher RPM → thinner film
     """)
 
-    rpm_vals = np.linspace(1000, 6000, 50)
-    thickness_vals = ref_thickness * (base_rpm / rpm_vals)
+# -------------------------------
+# PRE-BAKE MODEL (NEW)
+# -------------------------------
+def prebake_effect(resist_type, thickness):
+    if resist_type == "AZ1505":
+        reduction_percent = np.random.uniform(5, 10)
+    else:
+        reduction_percent = np.random.uniform(8, 15)
 
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(
-        x=rpm_vals,
-        y=thickness_vals,
-        mode='lines'
-    ))
+    new_thickness = thickness * (1 - reduction_percent/100)
 
-    fig.update_layout(
-        title="RPM vs Thickness",
-        xaxis_title="RPM",
-        yaxis_title="Thickness (nm)"
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-    st.write("### Typical Values")
-
-    table_rpm = [1000, 2000, 3000, 4000, 5000]
-    table_thickness = [int(ref_thickness * (base_rpm / r)) for r in table_rpm]
-
-    st.table({
-        "RPM": table_rpm,
-        "Thickness (nm)": table_thickness
-    })
+    return new_thickness, reduction_percent
 
 # -------------------------------
 # APP START
 # -------------------------------
-
 st.title("3D Lithography Simulator")
 
 size = 15
 dx = 1 / size
 
 # -------------------------------
-# STEP 0: SUBSTRATE
+# STEP 0
 # -------------------------------
 st.header("Step 0: Silicon Substrate")
 
@@ -112,7 +97,7 @@ fig0.add_trace(create_block(0,0,1,1,0,200,"gray"))
 st.plotly_chart(fig0, use_container_width=True)
 
 # -------------------------------
-# STEP 1: SiO2
+# STEP 1
 # -------------------------------
 st.header("Step 1: SiO₂ Deposition")
 
@@ -124,20 +109,47 @@ fig1.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
 st.plotly_chart(fig1, use_container_width=True)
 
 # -------------------------------
-# STEP 2: PHOTORESIST
+# STEP 2: PR COATING
 # -------------------------------
 st.header("Step 2: Photoresist Coating")
 
 resist_type = st.selectbox("Resist Type", ["AZ1505", "PMMA"])
 resist_thickness = st.slider("Resist Thickness (nm)", 100, 500, 200)
 
-show_rpm_info(resist_type, resist_thickness)
+rpm_suggestion(resist_type)
 
 fig2 = go.Figure()
 fig2.add_trace(create_block(0,0,1,1,0,200,"gray"))
 fig2.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
 fig2.add_trace(create_block(0,0,1,1,200+sio2_thickness,resist_thickness,"orange"))
 st.plotly_chart(fig2, use_container_width=True)
+
+# -------------------------------
+# STEP 2.5: PRE-BAKE (NEW)
+# -------------------------------
+st.header("Step 2.5: Pre-Baking")
+
+baked_thickness, reduction = prebake_effect(resist_type, resist_thickness)
+
+st.markdown(f"""
+- Initial Thickness: **{resist_thickness:.1f} nm**
+- After Pre-bake: **{baked_thickness:.1f} nm**
+- Thickness Reduction: **{reduction:.2f}%**
+""")
+
+fig_pb = go.Figure()
+fig_pb.add_trace(create_block(0,0,1,1,0,200,"gray"))
+fig_pb.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
+
+# darker resist after bake
+fig_pb.add_trace(create_block(
+    0,0,1,1,
+    200 + sio2_thickness,
+    baked_thickness,
+    "darkorange"
+))
+
+st.plotly_chart(fig_pb, use_container_width=True)
 
 # -------------------------------
 # STEP 3: EXPOSURE
@@ -157,19 +169,19 @@ for i in range(size):
         x0, y0 = i*dx, j*dx
         exposed = mask[i,j] == 1
 
-        color = "red" if exposed else "orange"
+        color = "red" if exposed else "darkorange"
 
         fig3.add_trace(create_block(
             x0, y0, dx, dx,
             200 + sio2_thickness,
-            resist_thickness,
+            baked_thickness,
             color
         ))
 
         if exposed:
             fig3.add_trace(create_block(
                 x0, y0, dx, dx,
-                200 + sio2_thickness + resist_thickness,
+                200 + sio2_thickness + baked_thickness,
                 200,
                 "yellow",
                 opacity=0.2
@@ -195,7 +207,7 @@ for i in range(size):
             fig4.add_trace(create_block(
                 x0, y0, dx, dx,
                 200 + sio2_thickness,
-                resist_thickness,
+                baked_thickness,
                 "green"
             ))
 

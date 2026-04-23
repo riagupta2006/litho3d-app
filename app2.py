@@ -2,12 +2,10 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="Virtual Lab: Photolithography", layout="wide")
-
-st.title("Virtual Lab: Photolithography")
+st.set_page_config(page_title="Lithography Simulator", layout="wide")
 
 # -------------------------------
-# BLOCK FUNCTION
+# FIXED BLOCK (SOLID)
 # -------------------------------
 def create_block(x0, y0, dx, dy, z0, dz, color, opacity=1.0):
     x = [x0, x0+dx, x0+dx, x0, x0, x0+dx, x0+dx, x0]
@@ -27,142 +25,32 @@ def create_block(x0, y0, dx, dy, z0, dz, color, opacity=1.0):
     )
 
 # -------------------------------
-# MASK
+# CENTERED MASK (FIXED)
 # -------------------------------
 def generate_mask(size, pattern):
     mask = np.zeros((size, size))
-    c = size // 2
+
+    center = size // 2
 
     if pattern == "Lines":
         for j in range(-2, 3, 2):
-            mask[:, c+j] = 1
+            mask[:, center + j] = 1
+
     elif pattern == "Dots":
-        for i in range(c-4, c+5, 4):
-            for j in range(c-4, c+5, 4):
+        for i in range(center-4, center+5, 4):
+            for j in range(center-4, center+5, 4):
                 mask[i:i+2, j:j+2] = 1
+
     elif pattern == "Square":
-        mask[c-3:c+3, c-3:c+3] = 1
+        mask[center-3:center+3, center-3:center+3] = 1
 
     return mask
 
 # -------------------------------
-# PREBAKE
+# RPM SUGGESTION
 # -------------------------------
-def prebake_effect(thickness):
-    reduction = np.random.uniform(5, 10)
-    return thickness * (1 - reduction/100), reduction
-
-# -------------------------------
-# TABS
-# -------------------------------
-tabs = st.tabs(["Aim", "Theory", "Procedure", "Simulation", "Quiz"])
-
-# -------------------------------
-# AIM
-# -------------------------------
-with tabs[0]:
-    st.header("Aim")
-    st.markdown("""
-- Understand photolithography process from oxide growth to development.
-- Simulate spin coating of positive photoresist on grown SiO2.
-- Analyze emperical relationship between RPM and thickness of photorests film.
-- Observe thermal effects of the Soft Bake process on film densification and photoactive compound stability.  
-- Visualize mask creation, exposure of photoresist and development of photoresist.  
-""")
-
-# -------------------------------
-# THEORY
-# -------------------------------
-with tabs[1]:
-    st.header("Theory")
-
-    st.subheader("Thermal Oxidation")
-    st.write("""SiO₂ is grown from Si where ~44% oxide thickness comes from consumed silicon
-This process takes place in a diffusion furnace at temperatures between 800°C and 1200°C to grow SiO2.
-Two methods are commonly used- dry oxidation (lengthy process) and wet oxidation (faster process)""")
-
-    st.subheader("Spin Coating")
-    st.write("""
-Spin coating is used to deposit uniform thin films onto flat substrates.
-The final film thickness (t) depends heavily on the spin speed (ω in RPM) and the viscosity of the photoresist.
-For AZ 1505, this can be approximated using the inverse square root law:
-t = k / √ω
-k is a resist-specific constant calibrated to yield ~0.5 µm at 4000 RPM.
-""")
-
-    st.subheader("Soft Bake")
-    st.write("""
-Photoresist is heated at 90–100°C for 60–90 seconds in order to:
-i)   Remove excess solvent from photoresist coating.
-ii)  Increase adhesion of photoresist to the underlying material (SiO2). 
-iii) Reduce contamination and mask damage.
-Temperatures above 110°C risk thermally degrading the Photoactive Compound (PAC).
-Temperatures above 140°C cause the resist to cross-link and char, rendering it useless for UV exposure.
-""")
-
-    st.subheader("Exposure")
-    st.write("""
-
-
-    """)
-
-    st.subheader("Development")
-    st.write("""Development is done in order to selectively remove portions of the photoresist layer that have been altered by light exposure
-Thus, transforming a latent chemical image into a physical 3D pattern on the substrate.
-The developer we use for developing hardened AZ1505 is AZ3000MIF and Isopropanol is used for developing hardened PMMA.""")
-
-# -------------------------------
-# PROCEDURE
-# -------------------------------
-with tabs[2]:
-    st.header("Procedure")
-
-    st.markdown("""
-1. Navigate the simulation tab.
-2. Observe the Silicon substrate to be operated on.
-3. Adjust the slider to the desired amount of growth required and observe how much silicon gets consumed.
-4. Choose the preferred positive photoresist.
-5. Select preferred thickness of photoresist if unsure of spin speed of spin coater. The suggested RPM is automatically selected.
-6. Observe the reduction in thickness of photoresist as it is heated during the Soft Bake process.
-7. Choose the desired mask and observe how the photoresist is exposed to the UV light.
-8. The simulation is concluded with the develpment process where the required pattern is created on the photoresist.
-""")
-
-# -------------------------------
-# SIMULATION
-# -------------------------------
-with tabs[3]:
-
-    size = 15
-    dx = 1/size
-
-    # STEP 0
-    st.subheader("Step 0: Silicon Substrate of thickness 500nm is taken.")
-    si_thickness = 500
-
-    fig0 = go.Figure()
-    fig0.add_trace(create_block(0,0,1,1,0,si_thickness,"red"))
-    st.plotly_chart(fig0, use_container_width=True)
-
-    # STEP 1: OXIDATION
-    st.subheader("Step 1: SiO2 is grown by oxidation of Silicon Substrate.")
-    st.write("Oxidation of Silicon takes place in diffusion furnace at 800°C-1200°C")
-    sio2_thickness = st.slider("Oxide Thickness (nm)", 50, 300, 150)
-
-    si_consumed = 0.44 * sio2_thickness
-    new_si_thickness = si_thickness - si_consumed
-
-    st.write(f"Silicon Consumed: {si_consumed:.1f} nm")
-
-    fig1 = go.Figure()
-    fig1.add_trace(create_block(0,0,1,1,0,new_si_thickness,"red"))
-    fig1.add_trace(create_block(0,0,1,1,new_si_thickness,sio2_thickness,"blue"))
-    st.plotly_chart(fig1, use_container_width=True)
-
-    # STEP 2
-    st.subheader("Step 2: Positive photoresist is spin-coated on top of SiO2.")
-
-    resist_type = st.selectbox("Resist Type", ["AZ1505", "PMMA"])
+def rpm_suggestion(resist_type):
+    st.subheader("Spin Coating Optimization")
 
     if resist_type == "AZ1505":
         base_rpm = 3000
@@ -172,114 +60,202 @@ with tabs[3]:
         ref_thickness = 300
 
     target_thickness = st.slider("Target Thickness (nm)", 100, 600, 200)
+
     suggested_rpm = int(base_rpm * (ref_thickness / target_thickness))
 
-    st.write(f"Suggested RPM: {suggested_rpm}")
+    st.markdown(f"""
+    **Suggested RPM:** `{suggested_rpm} rpm`
 
-    rpm = st.slider("Spin Speed (RPM)", 1000, 6000, suggested_rpm)
+    📌 Thickness ∝ 1 / RPM
+    """)
 
-    resist_thickness = ref_thickness * (base_rpm / rpm)
-    st.write(f"Achieved Thickness: {resist_thickness:.1f} nm")
+    return base_rpm, ref_thickness
 
-    fig2 = go.Figure()
-    fig2.add_trace(create_block(0,0,1,1,0,new_si_thickness,"red"))
-    fig2.add_trace(create_block(0,0,1,1,new_si_thickness,sio2_thickness,"blue"))
-    fig2.add_trace(create_block(
-        0,0,1,1,
-        new_si_thickness+sio2_thickness,
-        resist_thickness,
-        "orange"
-    ))
-    st.plotly_chart(fig2, use_container_width=True)
+# -------------------------------
+# PREBAKE
+# -------------------------------
+def prebake_effect(resist_type, thickness):
+    if resist_type == "AZ1505":
+        reduction_percent = np.random.uniform(5, 10)
+    else:
+        reduction_percent = np.random.uniform(8, 15)
 
-    # STEP 3
-    st.subheader("Step 3: Soft Bake")
+    new_thickness = thickness * (1 - reduction_percent/100)
+    return new_thickness, reduction_percent
 
-    baked_thickness, reduction = prebake_effect(resist_thickness)
+# -------------------------------
+# APP START
+# -------------------------------
+st.title("3D Lithography Simulator")
 
-    st.write(f"Reduction: {reduction:.2f}%")
+size = 15
+dx = 1 / size
 
-    fig_pb = go.Figure()
-    fig_pb.add_trace(create_block(0,0,1,1,0,new_si_thickness,"gray"))
-    fig_pb.add_trace(create_block(0,0,1,1,new_si_thickness,sio2_thickness,"blue"))
-    fig_pb.add_trace(create_block(
-        0,0,1,1,
-        new_si_thickness+sio2_thickness,
-        baked_thickness,
-        "#cc5500"
-    ))
-    st.plotly_chart(fig_pb, use_container_width=True)
+# -------------------------------
+# STEP 0
+# -------------------------------
+st.header("Step 0: Silicon Substrate")
 
-    # STEP 4: EXPOSURE (WITH LIGHT BACK)
-    st.subheader("Step 4: Exposure")
+fig0 = go.Figure()
+fig0.add_trace(create_block(0,0,1,1,0,200,"gray"))
+st.plotly_chart(fig0, use_container_width=True)
 
-    pattern = st.selectbox("Mask Pattern", ["Lines", "Dots", "Square"])
-    mask = generate_mask(size, pattern)
+# -------------------------------
+# STEP 1
+# -------------------------------
+st.header("Step 1: SiO₂ Deposition")
 
-    fig3 = go.Figure()
-    fig3.add_trace(create_block(0,0,1,1,0,new_si_thickness,"gray"))
-    fig3.add_trace(create_block(0,0,1,1,new_si_thickness,sio2_thickness,"blue"))
+sio2_thickness = st.slider("SiO₂ Thickness (nm)", 100, 500, 200)
 
-    for i in range(size):
-        for j in range(size):
-            x0, y0 = i*dx, j*dx
-            exposed = mask[i,j] == 1
+fig1 = go.Figure()
+fig1.add_trace(create_block(0,0,1,1,0,200,"gray"))
+fig1.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
+st.plotly_chart(fig1, use_container_width=True)
 
-            color = "red" if exposed else "#cc5500"
+# -------------------------------
+# STEP 2: PHOTORESIST
+# -------------------------------
+st.header("Step 2: Photoresist Coating")
 
+resist_type = st.selectbox("Resist Type", ["AZ1505", "PMMA"])
+
+# base parameters
+if resist_type == "AZ1505":
+    base_rpm = 3000
+    ref_thickness = 500
+else:
+    base_rpm = 4000
+    ref_thickness = 300
+
+# ---- TARGET THICKNESS ----
+target_thickness = st.slider("Target Thickness (nm)", 100, 600, 200)
+
+# ---- COMPUTE RPM RANGE FROM THICKNESS RANGE ----
+rpm_min = int(base_rpm * (ref_thickness / 600))   # thickest film → lowest rpm
+rpm_max = int(base_rpm * (ref_thickness / 100))   # thinnest film → highest rpm
+
+# ---- SUGGESTED RPM ----
+suggested_rpm = int(base_rpm * (ref_thickness / target_thickness))
+
+st.markdown(f"""
+**Suggested RPM:** `{suggested_rpm} rpm`  
+(Automatically matched to your target thickness)
+""")
+
+# ---- RPM SLIDER (NOW CONSISTENT) ----
+rpm = st.slider(
+    "Spin Speed (RPM)",
+    rpm_min,
+    rpm_max,
+    suggested_rpm
+)
+
+# ---- RESULTING THICKNESS ----
+resist_thickness = ref_thickness * (base_rpm / rpm)
+
+st.write(f"**Achieved Thickness:** {resist_thickness:.1f} nm")
+
+# -------------------------------
+# PLOT
+# -------------------------------
+fig2 = go.Figure()
+fig2.add_trace(create_block(0,0,1,1,0,200,"gray"))
+fig2.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
+fig2.add_trace(create_block(
+    0,0,1,1,
+    200+sio2_thickness,
+    resist_thickness,
+    "orange"
+))
+st.plotly_chart(fig2, use_container_width=True)
+
+# -------------------------------
+# STEP 2.5: PREBAKE
+# -------------------------------
+st.header("Step 2.5: Soft Bake (Pre-bake)")
+
+baked_thickness, reduction = prebake_effect(resist_type, resist_thickness)
+
+st.markdown(f"""
+**Soft Bake Conditions (Typical for AZ1505):**
+- Temperature: **90–100°C**
+- Time: **60–90 seconds**
+
+**Thickness Change:**
+- Before Bake: **{resist_thickness:.1f} nm**
+- After Bake: **{baked_thickness:.1f} nm**
+- Reduction: **{reduction:.2f}%**
+""")
+
+fig_pb = go.Figure()
+fig_pb.add_trace(create_block(0,0,1,1,0,200,"gray"))
+fig_pb.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
+fig_pb.add_trace(create_block(
+    0,0,1,1,
+    200 + sio2_thickness,
+    baked_thickness,
+    "darkorange"
+))
+st.plotly_chart(fig_pb, use_container_width=True)
+
+# -------------------------------
+# STEP 3: EXPOSURE
+# -------------------------------
+st.header("Step 3: Exposure")
+
+pattern = st.selectbox("Mask Pattern", ["Lines", "Dots", "Square"])
+mask = generate_mask(size, pattern)
+
+fig3 = go.Figure()
+fig3.add_trace(create_block(0,0,1,1,0,200,"gray"))
+fig3.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
+
+for i in range(size):
+    for j in range(size):
+        x0, y0 = i*dx, j*dx
+        exposed = mask[i,j] == 1
+
+        color = "red" if exposed else "darkorange"
+
+        fig3.add_trace(create_block(
+            x0, y0, dx, dx,
+            200 + sio2_thickness,
+            baked_thickness,
+            color
+        ))
+
+        if exposed:
             fig3.add_trace(create_block(
-                x0,y0,dx,dx,
-                new_si_thickness+sio2_thickness,
-                baked_thickness,
-                color
+                x0, y0, dx, dx,
+                200 + sio2_thickness + baked_thickness,
+                200,
+                "yellow",
+                opacity=0.2
             ))
 
-            if exposed:
-                fig3.add_trace(create_block(
-                    x0, y0, dx, dx,
-                    new_si_thickness+sio2_thickness+baked_thickness,
-                    300,
-                    "yellow",
-                    opacity=0.2
-                ))
-
-    st.plotly_chart(fig3, use_container_width=True)
-
-    # STEP 5
-    st.subheader("Step 5: Development")
-
-    st.write("Developer Used: AZ3000 MIF")
-
-    fig4 = go.Figure()
-    fig4.add_trace(create_block(0,0,1,1,0,new_si_thickness,"gray"))
-    fig4.add_trace(create_block(0,0,1,1,new_si_thickness,sio2_thickness,"blue"))
-
-    for i in range(size):
-        for j in range(size):
-            if mask[i,j] == 0:
-                x0, y0 = i*dx, j*dx
-
-                fig4.add_trace(create_block(
-                    x0,y0,dx,dx,
-                    new_si_thickness+sio2_thickness,
-                    baked_thickness,
-                    "green"
-                ))
-
-    st.plotly_chart(fig4, use_container_width=True)
+st.plotly_chart(fig3, use_container_width=True)
 
 # -------------------------------
-# QUIZ
+# STEP 4: DEVELOPMENT
 # -------------------------------
-with tabs[4]:
-    st.header("Quiz")
+st.header("Step 4: Development")
 
-    q1 = st.radio("Developer used?", ["KOH", "AZ3000 MIF", "HF"])
-    q2 = st.radio("Thickness relation?", ["∝ RPM", "∝ 1/√RPM", "∝ Temperature"])
+fig4 = go.Figure()
+fig4.add_trace(create_block(0,0,1,1,0,200,"gray"))
+fig4.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
 
-    if st.button("Submit"):
-        score = 0
-        if q1 == "AZ3000 MIF": score += 1
-        if q2 == "∝ 1/√RPM": score += 1
+for i in range(size):
+    for j in range(size):
+        if mask[i,j] == 0:
+            x0, y0 = i*dx, j*dx
 
-        st.success(f"Score: {score}/2")
+            fig4.add_trace(create_block(
+                x0, y0, dx, dx,
+                200 + sio2_thickness,
+                baked_thickness,
+                "green"
+            ))
+
+st.plotly_chart(fig4, use_container_width=True)
+
+st.success("Simulation Complete!")

@@ -2,10 +2,12 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="Virtual Lithography Lab", layout="wide")
+st.set_page_config(page_title="Virtual Lab: Photolithography", layout="wide")
+
+st.title("🧪 Virtual Lab: Photolithography")
 
 # -------------------------------
-# BLOCK FUNCTION
+# BLOCK FUNCTION (SOLID)
 # -------------------------------
 def create_block(x0, y0, dx, dy, z0, dz, color, opacity=1.0):
     x = [x0, x0+dx, x0+dx, x0, x0, x0+dx, x0+dx, x0]
@@ -44,7 +46,7 @@ def generate_mask(size, pattern):
     return mask
 
 # -------------------------------
-# PREBAKE
+# PREBAKE MODEL
 # -------------------------------
 def prebake_effect(thickness):
     reduction = np.random.uniform(5, 10)
@@ -59,15 +61,14 @@ tabs = st.tabs(["Aim", "Theory", "Procedure", "Simulation", "Quiz"])
 # AIM
 # -------------------------------
 with tabs[0]:
-    st.header("Aim")
+    st.header("Aim & Objective")
 
     st.markdown("""
-### Objective
-- To understand the **photolithography process**
-- To study the effect of **spin coating (RPM vs thickness)**
-- To observe **thermal oxidation of silicon**
-- To analyze **photoresist behavior during soft baking**
-- To visualize **pattern transfer and development**
+- To understand the **photolithography process used in microfabrication**
+- To study **thermal oxidation of silicon**
+- To analyze **spin coating and RPM–thickness relationship**
+- To observe **photoresist changes during soft baking**
+- To visualize **pattern transfer and development using AZ3000 MIF**
 """)
 
 # -------------------------------
@@ -76,31 +77,66 @@ with tabs[0]:
 with tabs[1]:
     st.header("Theory")
 
+    st.subheader("1. Thermal Oxidation of Silicon")
     st.markdown("""
-### Photolithography Overview
-Photolithography is a microfabrication technique used to transfer patterns onto substrates.
+Silicon dioxide (SiO₂) is grown by oxidizing silicon at high temperatures (900–1100°C).
 
-### Key Steps:
-1. **Thermal Oxidation**
-   - Si + O₂ → SiO₂
-   - Consumes silicon (~44% of oxide thickness)
+Reaction:
+Si + O₂ → SiO₂
 
-2. **Spin Coating**
-   - Thickness inversely proportional to RPM
+During this process:
+- Silicon is **consumed**
+- Approximately **44% of oxide thickness comes from silicon**
+- Remaining comes from oxygen incorporation
+""")
 
-3. **Soft Bake**
-   - Removes solvent
-   - Improves adhesion
+    st.subheader("2. Spin Coating")
+    st.markdown("""
+Spin coating is used to deposit a uniform thin film of photoresist.
 
-4. **Exposure**
-   - UV light modifies resist solubility
+Process:
+- Liquid resist is dispensed on wafer
+- Wafer spins at high RPM
+- Centrifugal force spreads resist
 
-5. **Development**
-   - Exposed regions removed (positive resist)
-   - Developer: **AZ 3000 MIF**
+### Thickness Dependence:
+Thickness depends on:
+- Spin speed (RPM)
+- Viscosity of resist
+- Solvent evaporation rate
 
-### Important Relation:
-- Thickness ∝ 1 / RPM
+### Empirical Relation:
+Thickness ∝ 1 / √RPM
+
+This is called the **inverse square root law**, meaning:
+- Doubling RPM reduces thickness by ~√2
+""")
+
+    st.subheader("3. Soft Bake (Pre-bake)")
+    st.markdown("""
+Purpose:
+- Remove solvent
+- Improve adhesion
+- Stabilize resist
+
+Typical Conditions:
+- Temperature: **90–100°C**
+- Time: **60–90 seconds**
+
+Effects:
+- Thickness reduces (~5–10%)
+- Resist becomes **denser and slightly darker**
+""")
+
+    st.subheader("4. Exposure & Development")
+    st.markdown("""
+- UV light modifies resist solubility
+- Positive resist → exposed areas removed
+
+### Developer Used:
+**AZ 3000 MIF**
+- Metal-ion-free developer
+- Provides clean and controlled development
 """)
 
 # -------------------------------
@@ -110,13 +146,21 @@ with tabs[2]:
     st.header("Procedure")
 
     st.markdown("""
-1. Select oxide thickness (thermal growth)
-2. Choose resist type
-3. Set target thickness and RPM
-4. Observe resist thickness after spin coating
-5. Perform soft bake and note reduction
-6. Select mask pattern
-7. Observe exposure and development
+**Step 1:** Select oxide thickness (thermal growth)
+
+**Step 2:** Choose photoresist type
+
+**Step 3:** Set target thickness and RPM
+
+**Step 4:** Observe resist thickness after spin coating
+
+**Step 5:** Perform soft bake and note thickness reduction
+
+**Step 6:** Select mask pattern and observe exposure
+
+**Step 7:** Perform development using AZ3000 MIF
+
+**Step 8:** Analyze final pattern
 """)
 
 # -------------------------------
@@ -124,7 +168,7 @@ with tabs[2]:
 # -------------------------------
 with tabs[3]:
 
-    st.title("Lithography Simulation")
+    st.header("Simulation")
 
     size = 15
     dx = 1/size
@@ -137,16 +181,18 @@ with tabs[3]:
     fig0.add_trace(create_block(0,0,1,1,0,si_thickness,"gray"))
     st.plotly_chart(fig0, use_container_width=True)
 
-    # STEP 1: THERMAL OXIDATION
-    st.subheader("Step 1: SiO₂ Growth")
+    # STEP 1: OXIDATION
+    st.subheader("Step 1: Thermal Oxidation (SiO₂ Growth)")
 
     sio2_thickness = st.slider("Oxide Thickness (nm)", 50, 300, 150)
 
-    # Si consumption ≈ 0.44 × oxide thickness
     si_consumed = 0.44 * sio2_thickness
     new_si_thickness = si_thickness - si_consumed
 
-    st.write(f"Silicon Consumed: {si_consumed:.1f} nm")
+    st.markdown(f"""
+- Silicon Consumed: **{si_consumed:.1f} nm**
+- This follows practical oxidation physics (~44% rule)
+""")
 
     fig1 = go.Figure()
     fig1.add_trace(create_block(0,0,1,1,0,new_si_thickness,"gray"))
@@ -154,7 +200,7 @@ with tabs[3]:
     st.plotly_chart(fig1, use_container_width=True)
 
     # STEP 2
-    st.subheader("Step 2: Photoresist Coating")
+    st.subheader("Step 2: Spin Coating")
 
     resist_type = st.selectbox("Resist Type", ["AZ1505", "PMMA"])
 
@@ -166,15 +212,18 @@ with tabs[3]:
         ref_thickness = 300
 
     target_thickness = st.slider("Target Thickness (nm)", 100, 600, 200)
-    suggested_rpm = int(base_rpm * (ref_thickness / target_thickness))
 
+    suggested_rpm = int(base_rpm * (ref_thickness / target_thickness))
     st.write(f"Suggested RPM: {suggested_rpm}")
 
     rpm = st.slider("Spin Speed (RPM)", 1000, 6000, suggested_rpm)
 
     resist_thickness = ref_thickness * (base_rpm / rpm)
 
-    st.write(f"Achieved Thickness: {resist_thickness:.1f} nm")
+    st.markdown(f"""
+- Achieved Thickness: **{resist_thickness:.1f} nm**
+- Demonstrates inverse relation between RPM and thickness
+""")
 
     fig2 = go.Figure()
     fig2.add_trace(create_block(0,0,1,1,0,new_si_thickness,"gray"))
@@ -196,6 +245,7 @@ with tabs[3]:
 - Temperature: **90–100°C**
 - Time: **60–90 sec**
 - Thickness Reduction: **{reduction:.2f}%**
+- Resist becomes darker due to solvent evaporation
 """)
 
     fig_pb = go.Figure()
@@ -205,7 +255,7 @@ with tabs[3]:
         0,0,1,1,
         new_si_thickness+sio2_thickness,
         baked_thickness,
-        "#cc5500"   # darker resist
+        "#cc5500"
     ))
     st.plotly_chart(fig_pb, use_container_width=True)
 
@@ -238,7 +288,12 @@ with tabs[3]:
     # STEP 4
     st.subheader("Step 4: Development")
 
-    st.write("Developer Used: **AZ 3000 MIF**")
+    st.markdown("""
+**Developer Used: AZ 3000 MIF**
+- Metal-ion-free developer
+- Removes exposed regions in positive resist
+- Ensures clean pattern transfer
+""")
 
     fig4 = go.Figure()
     fig4.add_trace(create_block(0,0,1,1,0,new_si_thickness,"gray"))
@@ -264,21 +319,12 @@ with tabs[3]:
 with tabs[4]:
     st.header("Quiz")
 
-    q1 = st.radio(
-        "1. What is the developer used for AZ1505?",
-        ["KOH", "AZ 3000 MIF", "HF"]
-    )
-
-    q2 = st.radio(
-        "2. Thickness is inversely proportional to?",
-        ["Temperature", "RPM", "Exposure time"]
-    )
+    q1 = st.radio("Developer used?", ["KOH", "AZ3000 MIF", "HF"])
+    q2 = st.radio("Thickness relation?", ["∝ RPM", "∝ 1/√RPM", "∝ Temperature"])
 
     if st.button("Submit"):
         score = 0
-        if q1 == "AZ 3000 MIF":
-            score += 1
-        if q2 == "RPM":
-            score += 1
+        if q1 == "AZ3000 MIF": score += 1
+        if q2 == "∝ 1/√RPM": score += 1
 
         st.success(f"Score: {score}/2")

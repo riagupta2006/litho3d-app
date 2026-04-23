@@ -5,16 +5,18 @@ import plotly.graph_objects as go
 st.set_page_config(page_title="Lithography Simulator", layout="wide")
 
 # -------------------------------
-# BLOCK WITH PROPER FACES (SOLID)
+# FIXED BLOCK (PROPER SOLID 3D)
 # -------------------------------
 def create_block(x0, y0, dx, dy, z0, dz, color, opacity=1.0):
+    # 8 vertices
     x = [x0, x0+dx, x0+dx, x0, x0, x0+dx, x0+dx, x0]
     y = [y0, y0, y0+dy, y0+dy, y0, y0, y0+dy, y0+dy]
     z = [z0, z0, z0, z0, z0+dz, z0+dz, z0+dz, z0+dz]
 
-    i = [0,0,0,1,1,2,4,4,5,6,3,2]
-    j = [1,2,3,2,5,3,5,6,6,7,7,6]
-    k = [2,3,1,5,6,7,6,7,4,4,4,7]
+    # 12 triangles (2 per face)
+    i = [0,0, 4,4, 0,0, 2,2, 1,1, 0,0]
+    j = [1,2, 5,6, 1,5, 3,7, 2,6, 3,7]
+    k = [2,3, 6,7, 5,4, 7,6, 6,5, 7,4]
 
     return go.Mesh3d(
         x=x, y=y, z=z,

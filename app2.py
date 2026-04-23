@@ -65,9 +65,9 @@ with tabs[0]:
     st.markdown("""
 - Understand photolithography process from oxide growth to development.
 - Simulate spin coating of positive photoresist on grown SiO2.
-- Analyze empirical relationship between RPM and thickness.
-- Observe thermal effects of Soft Bake.
-- Visualize mask, exposure and development.
+- Analyze emperical relationship between RPM and thickness of photorests film.
+- Observe thermal effects of the Soft Bake process on film densification and photoactive compound stability.  
+- Visualize mask creation, exposure of photoresist and development of photoresist.  
 """)
 
 # -------------------------------
@@ -77,36 +77,39 @@ with tabs[1]:
     st.header("Theory")
 
     st.subheader("Thermal Oxidation")
-    st.write("""
-SiO₂ is grown from Si where ~44% oxide thickness comes from consumed silicon.
-This occurs in a diffusion furnace at 800°C–1200°C.
-Dry oxidation is slow but high quality, wet oxidation is faster.
-""")
+    st.write("""SiO₂ is grown from Si where ~44% oxide thickness comes from consumed silicon
+This process takes place in a diffusion furnace at temperatures between 800°C and 1200°C to grow SiO2.
+Two methods are commonly used- dry oxidation (lengthy process) and wet oxidation (faster process)""")
 
     st.subheader("Spin Coating")
     st.write("""
-Film thickness follows:
+Spin coating is used to deposit uniform thin films onto flat substrates.
+The final film thickness (t) depends heavily on the spin speed (ω in RPM) and the viscosity of the photoresist.
+For AZ 1505, this can be approximated using the inverse square root law:
 t = k / √ω
-
-Higher RPM → thinner film.
+k is a resist-specific constant calibrated to yield ~0.5 µm at 4000 RPM.
 """)
 
     st.subheader("Soft Bake")
     st.write("""
-Done at 90–100°C to remove solvent and improve adhesion.
-Too high temperature damages resist.
+Photoresist is heated at 90–100°C for 60–90 seconds in order to:
+i)   Remove excess solvent from photoresist coating.
+ii)  Increase adhesion of photoresist to the underlying material (SiO2). 
+iii) Reduce contamination and mask damage.
+Temperatures above 110°C risk thermally degrading the Photoactive Compound (PAC).
+Temperatures above 140°C cause the resist to cross-link and char, rendering it useless for UV exposure.
 """)
 
     st.subheader("Exposure")
     st.write("""
-UV light passes through mask and alters photoresist chemistry.
-Exposed regions become soluble (positive resist).
-""")
+
+
+    """)
 
     st.subheader("Development")
-    st.write("""
-Removes exposed resist using AZ3000 MIF developer.
-""")
+    st.write("""Development is done in order to selectively remove portions of the photoresist layer that have been altered by light exposure
+Thus, transforming a latent chemical image into a physical 3D pattern on the substrate.
+The developer we use for developing hardened AZ1505 is AZ3000MIF and Isopropanol is used for developing hardened PMMA.""")
 
 # -------------------------------
 # PROCEDURE
@@ -115,13 +118,14 @@ with tabs[2]:
     st.header("Procedure")
 
     st.markdown("""
-1. Go to Simulation tab  
-2. Observe Silicon substrate  
-3. Grow oxide and note Si consumption  
-4. Spin coat resist  
-5. Perform soft bake  
-6. Apply mask & exposure  
-7. Develop pattern  
+1. Navigate the simulation tab.
+2. Observe the Silicon substrate to be operated on.
+3. Adjust the slider to the desired amount of growth required and observe how much silicon gets consumed.
+4. Choose the preferred positive photoresist.
+5. Select preferred thickness of photoresist if unsure of spin speed of spin coater. The suggested RPM is automatically selected.
+6. Observe the reduction in thickness of photoresist as it is heated during the Soft Bake process.
+7. Choose the desired mask and observe how the photoresist is exposed to the UV light.
+8. The simulation is concluded with the develpment process where the required pattern is created on the photoresist.
 """)
 
 # -------------------------------
@@ -133,7 +137,7 @@ with tabs[3]:
     dx = 1/size
 
     # STEP 0
-    st.subheader("Step 0: Silicon Substrate (500 nm)")
+    st.subheader("Step 0: Silicon Substrate of thickness 500nm is taken.")
     si_thickness = 500
 
     fig0 = go.Figure()
@@ -141,8 +145,8 @@ with tabs[3]:
     st.plotly_chart(fig0, use_container_width=True)
 
     # STEP 1: OXIDATION
-    st.subheader("Step 1: Oxidation")
-
+    st.subheader("Step 1: SiO2 is grown by oxidation of Silicon Substrate.")
+    st.write("Oxidation of Silicon takes place in diffusion furnace at 800°C-1200°C")
     sio2_thickness = st.slider("Oxide Thickness (nm)", 50, 300, 150)
 
     si_consumed = 0.44 * sio2_thickness
@@ -155,8 +159,8 @@ with tabs[3]:
     fig1.add_trace(create_block(0,0,1,1,new_si_thickness,sio2_thickness,"blue"))
     st.plotly_chart(fig1, use_container_width=True)
 
-    # STEP 2: SPIN COATING
-    st.subheader("Step 2: Spin Coating")
+    # STEP 2
+    st.subheader("Step 2: Positive photoresist is spin-coated on top of SiO2.")
 
     resist_type = st.selectbox("Resist Type", ["AZ1505", "PMMA"])
 
@@ -173,8 +177,8 @@ with tabs[3]:
     st.write(f"Suggested RPM: {suggested_rpm}")
 
     rpm = st.slider("Spin Speed (RPM)", 1000, 6000, suggested_rpm)
-    resist_thickness = ref_thickness * (base_rpm / rpm)
 
+    resist_thickness = ref_thickness * (base_rpm / rpm)
     st.write(f"Achieved Thickness: {resist_thickness:.1f} nm")
 
     fig2 = go.Figure()
@@ -188,10 +192,11 @@ with tabs[3]:
     ))
     st.plotly_chart(fig2, use_container_width=True)
 
-    # STEP 3: SOFT BAKE
+    # STEP 3
     st.subheader("Step 3: Soft Bake")
 
     baked_thickness, reduction = prebake_effect(resist_thickness)
+
     st.write(f"Reduction: {reduction:.2f}%")
 
     fig_pb = go.Figure()
@@ -205,7 +210,7 @@ with tabs[3]:
     ))
     st.plotly_chart(fig_pb, use_container_width=True)
 
-    # STEP 4: EXPOSURE
+    # STEP 4: EXPOSURE (WITH LIGHT BACK)
     st.subheader("Step 4: Exposure")
 
     pattern = st.selectbox("Mask Pattern", ["Lines", "Dots", "Square"])
@@ -219,6 +224,7 @@ with tabs[3]:
         for j in range(size):
             x0, y0 = i*dx, j*dx
             exposed = mask[i,j] == 1
+
             color = "red" if exposed else "#cc5500"
 
             fig3.add_trace(create_block(
@@ -239,8 +245,9 @@ with tabs[3]:
 
     st.plotly_chart(fig3, use_container_width=True)
 
-    # STEP 5: DEVELOPMENT
+    # STEP 5
     st.subheader("Step 5: Development")
+
     st.write("Developer Used: AZ3000 MIF")
 
     fig4 = go.Figure()
@@ -251,6 +258,7 @@ with tabs[3]:
         for j in range(size):
             if mask[i,j] == 0:
                 x0, y0 = i*dx, j*dx
+
                 fig4.add_trace(create_block(
                     x0,y0,dx,dx,
                     new_si_thickness+sio2_thickness,
@@ -271,9 +279,7 @@ with tabs[4]:
 
     if st.button("Submit"):
         score = 0
-        if q1 == "AZ3000 MIF":
-            score += 1
-        if q2 == "∝ 1/√RPM":
-            score += 1
+        if q1 == "AZ3000 MIF": score += 1
+        if q2 == "∝ 1/√RPM": score += 1
 
         st.success(f"Score: {score}/2")

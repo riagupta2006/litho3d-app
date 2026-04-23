@@ -4,10 +4,10 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="Virtual Lab: Photolithography", layout="wide")
 
-st.title("🧪 Virtual Lab: Photolithography")
+st.title("Virtual Lab: Photolithography")
 
 # -------------------------------
-# BLOCK FUNCTION (SOLID)
+# BLOCK FUNCTION
 # -------------------------------
 def create_block(x0, y0, dx, dy, z0, dz, color, opacity=1.0):
     x = [x0, x0+dx, x0+dx, x0, x0, x0+dx, x0+dx, x0]
@@ -27,7 +27,7 @@ def create_block(x0, y0, dx, dy, z0, dz, color, opacity=1.0):
     )
 
 # -------------------------------
-# CENTERED MASK
+# MASK (CENTERED)
 # -------------------------------
 def generate_mask(size, pattern):
     mask = np.zeros((size, size))
@@ -46,7 +46,7 @@ def generate_mask(size, pattern):
     return mask
 
 # -------------------------------
-# PREBAKE MODEL
+# PREBAKE
 # -------------------------------
 def prebake_effect(thickness):
     reduction = np.random.uniform(5, 10)
@@ -62,13 +62,12 @@ tabs = st.tabs(["Aim", "Theory", "Procedure", "Simulation", "Quiz"])
 # -------------------------------
 with tabs[0]:
     st.header("Aim & Objective")
-
     st.markdown("""
-- To understand the **photolithography process used in microfabrication**
-- To study **thermal oxidation of silicon**
-- To analyze **spin coating and RPM–thickness relationship**
-- To observe **photoresist changes during soft baking**
-- To visualize **pattern transfer and development using AZ3000 MIF**
+- Understand photolithography process  
+- Study SiO₂ growth from silicon  
+- Analyze RPM vs thickness relation  
+- Observe soft bake effects  
+- Visualize exposure and development  
 """)
 
 # -------------------------------
@@ -77,98 +76,51 @@ with tabs[0]:
 with tabs[1]:
     st.header("Theory")
 
-    st.subheader("1. Thermal Oxidation of Silicon")
-    st.markdown("""
-Silicon dioxide (SiO₂) is grown by oxidizing silicon at high temperatures (900–1100°C).
+    st.subheader("Thermal Oxidation")
+    st.write("SiO₂ is grown from Si. ~44% oxide thickness comes from consumed silicon.")
 
-Reaction:
-Si + O₂ → SiO₂
-
-During this process:
-- Silicon is **consumed**
-- Approximately **44% of oxide thickness comes from silicon**
-- Remaining comes from oxygen incorporation
+    st.subheader("Spin Coating")
+    st.write("""
+Thickness ∝ 1 / √RPM  
+Higher RPM → thinner film  
+Controlled by viscosity and evaporation
 """)
 
-    st.subheader("2. Spin Coating")
-    st.markdown("""
-Spin coating is used to deposit a uniform thin film of photoresist.
-
-Process:
-- Liquid resist is dispensed on wafer
-- Wafer spins at high RPM
-- Centrifugal force spreads resist
-
-### Thickness Dependence:
-Thickness depends on:
-- Spin speed (RPM)
-- Viscosity of resist
-- Solvent evaporation rate
-
-### Empirical Relation:
-Thickness ∝ 1 / √RPM
-
-This is called the **inverse square root law**, meaning:
-- Doubling RPM reduces thickness by ~√2
+    st.subheader("Soft Bake")
+    st.write("""
+90–100°C for 60–90 sec  
+Removes solvent → reduces thickness → darkens resist
 """)
 
-    st.subheader("3. Soft Bake (Pre-bake)")
-    st.markdown("""
-Purpose:
-- Remove solvent
-- Improve adhesion
-- Stabilize resist
-
-Typical Conditions:
-- Temperature: **90–100°C**
-- Time: **60–90 seconds**
-
-Effects:
-- Thickness reduces (~5–10%)
-- Resist becomes **denser and slightly darker**
-""")
-
-    st.subheader("4. Exposure & Development")
-    st.markdown("""
-- UV light modifies resist solubility
-- Positive resist → exposed areas removed
-
-### Developer Used:
-**AZ 3000 MIF**
-- Metal-ion-free developer
-- Provides clean and controlled development
-""")
+    st.subheader("Development")
+    st.write("Developer used: AZ3000 MIF")
 
 # -------------------------------
-# PROCEDURE
+# PROCEDURE (ALIGNED WITH SIM)
 # -------------------------------
 with tabs[2]:
     st.header("Procedure")
 
     st.markdown("""
-**Step 1:** Select oxide thickness (thermal growth)
+**Step 0:** Observe silicon substrate  
 
-**Step 2:** Choose photoresist type
+**Step 1:** Select oxide thickness and observe Si consumption  
 
-**Step 3:** Set target thickness and RPM
+**Step 2:** Choose resist type, set target thickness, and adjust RPM  
 
-**Step 4:** Observe resist thickness after spin coating
+**Step 3:** Observe coated resist thickness  
 
-**Step 5:** Perform soft bake and note thickness reduction
+**Step 4:** Perform soft bake and note thickness reduction  
 
-**Step 6:** Select mask pattern and observe exposure
+**Step 5:** Select mask pattern and observe UV exposure  
 
-**Step 7:** Perform development using AZ3000 MIF
-
-**Step 8:** Analyze final pattern
+**Step 6:** Observe development using AZ3000 MIF  
 """)
 
 # -------------------------------
 # SIMULATION
 # -------------------------------
 with tabs[3]:
-
-    st.header("Simulation")
 
     size = 15
     dx = 1/size
@@ -182,17 +134,14 @@ with tabs[3]:
     st.plotly_chart(fig0, use_container_width=True)
 
     # STEP 1: OXIDATION
-    st.subheader("Step 1: Thermal Oxidation (SiO₂ Growth)")
+    st.subheader("Step 1: SiO₂ Growth")
 
     sio2_thickness = st.slider("Oxide Thickness (nm)", 50, 300, 150)
 
     si_consumed = 0.44 * sio2_thickness
     new_si_thickness = si_thickness - si_consumed
 
-    st.markdown(f"""
-- Silicon Consumed: **{si_consumed:.1f} nm**
-- This follows practical oxidation physics (~44% rule)
-""")
+    st.write(f"Silicon Consumed: {si_consumed:.1f} nm")
 
     fig1 = go.Figure()
     fig1.add_trace(create_block(0,0,1,1,0,new_si_thickness,"gray"))
@@ -212,18 +161,14 @@ with tabs[3]:
         ref_thickness = 300
 
     target_thickness = st.slider("Target Thickness (nm)", 100, 600, 200)
-
     suggested_rpm = int(base_rpm * (ref_thickness / target_thickness))
+
     st.write(f"Suggested RPM: {suggested_rpm}")
 
     rpm = st.slider("Spin Speed (RPM)", 1000, 6000, suggested_rpm)
 
     resist_thickness = ref_thickness * (base_rpm / rpm)
-
-    st.markdown(f"""
-- Achieved Thickness: **{resist_thickness:.1f} nm**
-- Demonstrates inverse relation between RPM and thickness
-""")
+    st.write(f"Achieved Thickness: {resist_thickness:.1f} nm")
 
     fig2 = go.Figure()
     fig2.add_trace(create_block(0,0,1,1,0,new_si_thickness,"gray"))
@@ -241,12 +186,7 @@ with tabs[3]:
 
     baked_thickness, reduction = prebake_effect(resist_thickness)
 
-    st.markdown(f"""
-- Temperature: **90–100°C**
-- Time: **60–90 sec**
-- Thickness Reduction: **{reduction:.2f}%**
-- Resist becomes darker due to solvent evaporation
-""")
+    st.write(f"Reduction: {reduction:.2f}%")
 
     fig_pb = go.Figure()
     fig_pb.add_trace(create_block(0,0,1,1,0,new_si_thickness,"gray"))
@@ -259,7 +199,7 @@ with tabs[3]:
     ))
     st.plotly_chart(fig_pb, use_container_width=True)
 
-    # STEP 3
+    # STEP 3: EXPOSURE (WITH LIGHT BACK)
     st.subheader("Step 3: Exposure")
 
     pattern = st.selectbox("Mask Pattern", ["Lines", "Dots", "Square"])
@@ -283,17 +223,22 @@ with tabs[3]:
                 color
             ))
 
+            # 🔥 YELLOW UV LIGHT (RESTORED)
+            if exposed:
+                fig3.add_trace(create_block(
+                    x0, y0, dx, dx,
+                    new_si_thickness+sio2_thickness+baked_thickness,
+                    200,
+                    "yellow",
+                    opacity=0.2
+                ))
+
     st.plotly_chart(fig3, use_container_width=True)
 
     # STEP 4
     st.subheader("Step 4: Development")
 
-    st.markdown("""
-**Developer Used: AZ 3000 MIF**
-- Metal-ion-free developer
-- Removes exposed regions in positive resist
-- Ensures clean pattern transfer
-""")
+    st.write("Developer Used: AZ3000 MIF")
 
     fig4 = go.Figure()
     fig4.add_trace(create_block(0,0,1,1,0,new_si_thickness,"gray"))

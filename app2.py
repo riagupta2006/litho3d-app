@@ -25,24 +25,29 @@ def create_block(x0, y0, dx, dy, z0, dz, color, opacity=1.0):
     )
 
 # -------------------------------
-# MASK
+# CENTERED MASK (FIXED)
 # -------------------------------
 def generate_mask(size, pattern):
     mask = np.zeros((size, size))
 
+    center = size // 2
+
     if pattern == "Lines":
-        mask[:, ::4] = 1
+        for j in range(-2, 3, 2):
+            mask[:, center + j] = 1
+
     elif pattern == "Dots":
-        for i in range(0, size, 6):
-            for j in range(0, size, 6):
+        for i in range(center-4, center+5, 4):
+            for j in range(center-4, center+5, 4):
                 mask[i:i+2, j:j+2] = 1
+
     elif pattern == "Square":
-        mask[10:20, 10:20] = 1
+        mask[center-3:center+3, center-3:center+3] = 1
 
     return mask
 
 # -------------------------------
-# RPM SUGGESTION (NEW)
+# RPM SUGGESTION
 # -------------------------------
 def rpm_suggestion(resist_type):
     st.subheader("Spin Coating Optimization")
@@ -61,13 +66,13 @@ def rpm_suggestion(resist_type):
     st.markdown(f"""
     **Suggested RPM:** `{suggested_rpm} rpm`
 
-    📌 Based on simplified relation:
-    - Thickness ∝ 1 / RPM  
-    - Higher RPM → thinner film
+    📌 Thickness ∝ 1 / RPM
     """)
 
+    return base_rpm, ref_thickness
+
 # -------------------------------
-# PRE-BAKE MODEL (NEW)
+# PREBAKE
 # -------------------------------
 def prebake_effect(resist_type, thickness):
     if resist_type == "AZ1505":
@@ -76,7 +81,6 @@ def prebake_effect(resist_type, thickness):
         reduction_percent = np.random.uniform(8, 15)
 
     new_thickness = thickness * (1 - reduction_percent/100)
-
     return new_thickness, reduction_percent
 
 # -------------------------------
@@ -109,14 +113,21 @@ fig1.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
 st.plotly_chart(fig1, use_container_width=True)
 
 # -------------------------------
-# STEP 2: PR COATING
+# STEP 2: PHOTORESIST
 # -------------------------------
 st.header("Step 2: Photoresist Coating")
 
 resist_type = st.selectbox("Resist Type", ["AZ1505", "PMMA"])
-resist_thickness = st.slider("Resist Thickness (nm)", 100, 500, 200)
 
-rpm_suggestion(resist_type)
+base_rpm, ref_thickness = rpm_suggestion(resist_type)
+
+# NEW: RPM CONTROL (instead of thickness)
+rpm = st.slider("Spin Speed (RPM)", 1000, 6000, 3000)
+
+# thickness calculation
+resist_thickness = ref_thickness * (base_rpm / rpm)
+
+st.write(f"**Resulting Thickness:** {resist_thickness:.1f} nm")
 
 fig2 = go.Figure()
 fig2.add_trace(create_block(0,0,1,1,0,200,"gray"))
@@ -125,30 +136,32 @@ fig2.add_trace(create_block(0,0,1,1,200+sio2_thickness,resist_thickness,"orange"
 st.plotly_chart(fig2, use_container_width=True)
 
 # -------------------------------
-# STEP 2.5: PRE-BAKE (NEW)
+# STEP 2.5: PREBAKE
 # -------------------------------
-st.header("Step 2.5: Pre-Baking")
+st.header("Step 2.5: Soft Bake (Pre-bake)")
 
 baked_thickness, reduction = prebake_effect(resist_type, resist_thickness)
 
 st.markdown(f"""
-- Initial Thickness: **{resist_thickness:.1f} nm**
-- After Pre-bake: **{baked_thickness:.1f} nm**
-- Thickness Reduction: **{reduction:.2f}%**
+**Soft Bake Conditions (Typical for AZ1505):**
+- Temperature: **90–100°C**
+- Time: **60–90 seconds**
+
+**Thickness Change:**
+- Before Bake: **{resist_thickness:.1f} nm**
+- After Bake: **{baked_thickness:.1f} nm**
+- Reduction: **{reduction:.2f}%**
 """)
 
 fig_pb = go.Figure()
 fig_pb.add_trace(create_block(0,0,1,1,0,200,"gray"))
 fig_pb.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
-
-# darker resist after bake
 fig_pb.add_trace(create_block(
     0,0,1,1,
     200 + sio2_thickness,
     baked_thickness,
     "darkorange"
 ))
-
 st.plotly_chart(fig_pb, use_container_width=True)
 
 # -------------------------------
@@ -160,7 +173,6 @@ pattern = st.selectbox("Mask Pattern", ["Lines", "Dots", "Square"])
 mask = generate_mask(size, pattern)
 
 fig3 = go.Figure()
-
 fig3.add_trace(create_block(0,0,1,1,0,200,"gray"))
 fig3.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
 
@@ -195,7 +207,6 @@ st.plotly_chart(fig3, use_container_width=True)
 st.header("Step 4: Development")
 
 fig4 = go.Figure()
-
 fig4.add_trace(create_block(0,0,1,1,0,200,"gray"))
 fig4.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
 

@@ -17,11 +17,11 @@ tab1, tab2, tab3, tab4, tab5 = st.tabs(["Aim", "Theory", "Procedure", "Simulatio
 with tab1:
     st.header("Aim")
     st.markdown("""
-Understand photolithography process from oxide growth to development.  
-Simulate spin coating of positive photoresist on grown SiO2.  
-Analyze emperical relationship between RPM and thickness of photorests film.  
-Observe thermal effects of the Soft Bake process on film densification and photoactive compound stability.  
-Visualize mask creation, exposure of photoresist and development of photoresist.
+1. Understand photolithography process from oxide growth to development.  
+2. Simulate spin coating of positive photoresist on grown SiO2.  
+3. Analyze emperical relationship between RPM and thickness of photorests film.  
+4. Observe thermal effects of the Soft Bake process on film densification and photoactive compound stability.  
+5. Visualize mask creation, exposure of photoresist and development of photoresist.
 """)
 
 # -------------------------------
@@ -32,35 +32,49 @@ with tab2:
 
     st.subheader("Thermal Oxidation")
     st.markdown("""
-SiO₂ is grown from Si where ~44% oxide thickness comes from consumed silicon.  
-Occurs at 800–1200°C. Dry (slow) and wet (fast) oxidation methods are used.
+SiO₂ is grown from Si where ~44% oxide thickness comes from consumed silicon.
+This process takes place in a diffusion furnace at temperatures between 800°C and 1200°C to grow SiO2.
+Two methods are commonly used- dry oxidation (lengthy process) and wet oxidation (faster process)
 """)
 
     st.subheader("Spin Coating")
     st.markdown("""
-Final thickness depends on RPM:
+Spin coating is used to deposit uniform thin films onto flat substrates.
+The final film thickness (t) depends heavily on the spin speed (ω in RPM) and the viscosity of the photoresist.
+For AZ 1505, this can be approximated using the inverse square root law:
 
-t = k / √ω  
-
-k calibrated for ~0.5 µm at 4000 RPM.
+        t = k / √ω
+        
+k is a resist-specific constant calibrated to yield ~0.5 µm at 4000 RPM.
 """)
 
     st.subheader("Soft Bake")
     st.markdown("""
-Removes solvent, improves adhesion, prevents defects.  
-Above 110°C: PAC degradation. Above 140°C: resist damage.
+Photoresist is heated at 90–100°C for 60–90 seconds in order to:
+i) Remove excess solvent from photoresist coating.
+ii) Increase adhesion of photoresist to the underlying material (SiO2).
+iii) Reduce contamination and mask damage.
+
+Temperatures above 110°C risk thermally degrading the Photoactive Compound (PAC). 
+Temperatures above 140°C cause the resist to cross-link and char, rendering it useless for UV exposure.
 """)
 
     st.subheader("Exposure")
     st.markdown("""
-UV light passes through mask. Exposed regions become soluble in developer.
+UV light (wavelength of 365nm) is passed through the mask chosen.
+When certain areas are exposed to UV light, photoresist becomes soluble in developer in those areas.
+During exposure, ultraviolet (UV) light is passed through a mask onto the photoresist.  
+In positive photoresist (AZ1505 and PMMA), exposed regions undergo chemical changes that increase their solubility in the developer.  
+The intensity and duration of exposure determine the resolution and accuracy of the transferred pattern.
 """)
 
     st.subheader("Development")
     st.markdown("""
-Exposed regions dissolve forming pattern.  
-AZ1505 → AZ3000MIF  
-PMMA → Isopropanol
+Development removes portions of the photoresist altered by light exposure, converting a latent image into a physical pattern.  
+
+Developer used:  
+- AZ1505 → AZ3000MIF  
+- PMMA → Isopropanol
 """)
 
 # -------------------------------

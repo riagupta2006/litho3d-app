@@ -120,12 +120,10 @@ with tab4:
         if pattern=="Lines":
             for j in range(-2,3,2):
                 mask[:,c+j]=1
-        elif pattern == "Dots":
-            radius = size // 10
-            for i in range(size):
-                for j in range(size):
-                    if (i - c)**2 + (j - c)**2 <= radius**2:
-                        mask[i, j] = 1
+        elif pattern=="Dots":
+            for i in range(c-4,c+5,4):
+                for j in range(c-4,c+5,4):
+                    mask[i:i+2,j:j+2]=1
         else:
             mask[c-3:c+3,c-3:c+3]=1
         return mask
@@ -134,8 +132,8 @@ with tab4:
         red=np.random.uniform(5,10) if resist=="AZ1505" else np.random.uniform(8,15)
         return thick*(1-red/100),red
 
-    size = 50
-    dx = 1 / size
+    size=15
+    dx=1/size
 
     # STEP 0
     st.header("Step 0: Silicon substrate is taken")
@@ -233,8 +231,6 @@ Reduction: {red:.2f}%
 
     st.plotly_chart(fig)
 
-    st.success("Simulation Successfully Completed!")
-
 # -------------------------------
 # QUIZ
 # -------------------------------
@@ -243,46 +239,62 @@ with tab5:
 
     score = 0
 
-    q1 = st.radio("1. During thermal oxidation, what fraction of SiO₂ thickness comes from consumed silicon?",
-                  ["~20%", "~44%", "~70%", "~100%"])
+    # Q1
+    q1 = st.radio(
+        "1. During thermal oxidation, what fraction of SiO₂ thickness comes from consumed silicon?",
+        ["~20%", "~44%", "~70%", "~100%"]
+    )
     if q1 == "~44%":
         st.success("Correct!")
         score += 1
     else:
         st.error("Incorrect. About 44% comes from silicon consumption.")
 
-    q2 = st.radio("2. What is the relationship between spin speed (RPM) and photoresist thickness?",
-                  ["t ∝ RPM", "t ∝ 1/RPM", "t ∝ 1/√RPM", "t ∝ √RPM"])
+    # Q2
+    q2 = st.radio(
+        "2. What is the relationship between spin speed (RPM) and photoresist thickness?",
+        ["t ∝ RPM", "t ∝ 1/RPM", "t ∝ 1/√RPM", "t ∝ √RPM"]
+    )
     if q2 == "t ∝ 1/√RPM":
         st.success("Correct!")
         score += 1
     else:
         st.error("Incorrect. Thickness follows inverse square root relation.")
 
-    q3 = st.radio("3. What is the main purpose of soft bake?",
-                  ["Grow oxide", "Remove solvent", "Etch silicon", "Increase exposure"])
+    # Q3
+    q3 = st.radio(
+        "3. What is the main purpose of soft bake?",
+        ["Grow oxide", "Remove solvent", "Etch silicon", "Increase exposure"]
+    )
     if q3 == "Remove solvent":
         st.success("Correct!")
         score += 1
     else:
         st.error("Incorrect. Soft bake removes solvent and stabilizes resist.")
 
-    q4 = st.radio("4. In positive photoresist, what happens to exposed regions?",
-                  ["They harden", "They become insoluble", "They become more soluble", "Nothing happens"])
+    # Q4
+    q4 = st.radio(
+        "4. In positive photoresist, what happens to exposed regions?",
+        ["They harden", "They become insoluble", "They become more soluble", "Nothing happens"]
+    )
     if q4 == "They become more soluble":
         st.success("Correct!")
         score += 1
     else:
         st.error("Incorrect. Exposure increases solubility.")
 
-    q5 = st.radio("5. Which developer is used for AZ1505?",
-                  ["Water", "Acetone", "AZ3000MIF", "Isopropanol"])
+    # Q5
+    q5 = st.radio(
+        "5. Which developer is used for AZ1505?",
+        ["Water", "Acetone", "AZ3000MIF", "Isopropanol"]
+    )
     if q5 == "AZ3000MIF":
         st.success("Correct!")
         score += 1
     else:
         st.error("Incorrect. AZ3000MIF is used.")
 
+    # Final Score
     st.markdown("---")
     st.subheader(f"Your Score: {score}/5")
 

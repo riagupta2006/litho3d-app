@@ -120,10 +120,12 @@ with tab4:
         if pattern=="Lines":
             for j in range(-2,3,2):
                 mask[:,c+j]=1
-        elif pattern=="Dots":
-            for i in range(c-4,c+5,4):
-                for j in range(c-4,c+5,4):
-                    mask[i:i+2,j:j+2]=1
+elif pattern == "Dots":
+    radius = size // 10
+    for i in range(size):
+        for j in range(size):
+            if (i - center)**2 + (j - center)**2 <= radius**2:
+                mask[i, j] = 1
         else:
             mask[c-3:c+3,c-3:c+3]=1
         return mask
@@ -132,8 +134,8 @@ with tab4:
         red=np.random.uniform(5,10) if resist=="AZ1505" else np.random.uniform(8,15)
         return thick*(1-red/100),red
 
-    size=15
-    dx=1/size
+size = 50
+dx = 1 / size
 
     # STEP 0
     st.header("Step 0: Silicon substrate is taken")
@@ -230,6 +232,7 @@ Reduction: {red:.2f}%
                 fig.add_trace(create_block(i*dx,j*dx,dx,dx,200-si_cons+sio2,baked,"green"))
 
     st.plotly_chart(fig)
+st.success("Simulation Successfully Completed!")
 
 # -------------------------------
 # QUIZ

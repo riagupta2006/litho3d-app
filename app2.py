@@ -103,8 +103,6 @@ with tab3:
 # -------------------------------
 with tab4:
 
-    st.markdown("<h3 style='font-size:28px;'>Follow steps below</h3>", unsafe_allow_html=True)
-
     def create_block(x0, y0, dx, dy, z0, dz, color, opacity=1.0):
         x = [x0,x0+dx,x0+dx,x0,x0,x0+dx,x0+dx,x0]
         y = [y0,y0,y0+dy,y0+dy,y0,y0,y0+dy,y0+dy]
@@ -138,15 +136,17 @@ with tab4:
     dx=1/size
 
     # STEP 0
-    st.header("Step 0: Silicon")
-    st.markdown("<p style='font-size:18px;'>Base wafer</p>",unsafe_allow_html=True)
+    st.header("Step 0: Silicon substrate is taken")
+    st.markdown("<p style='font-size:18px;'>Base wafer of 200nm is taken and cleaned by following the rca procedures.</p>",unsafe_allow_html=True)
     fig=go.Figure()
     fig.add_trace(create_block(0,0,1,1,0,200,"red"))
     st.plotly_chart(fig)
 
     # STEP 1
-    st.header("Step 1: SiO₂ Growth")
-    st.markdown("<p style='font-size:18px;'>Adjust oxide</p>",unsafe_allow_html=True)
+    st.header("Step 1: SiO₂ Growth on Silicon Substrate")
+    st.markdown("<p style='font-size:18px;'>
+    Thickness of SiO2 is decided by understanding growth rates determined by temperature and time.
+    SiO2 is grown by consuming 44% of underlying Silicon.</p>",unsafe_allow_html=True)
 
     sio2=st.slider("Thickness",100,500,200)
     si_cons=0.44*sio2
@@ -159,7 +159,7 @@ with tab4:
 
     # STEP 2
     st.header("Step 2: Photoresist")
-    st.markdown("<p style='font-size:18px;'>Adjust coating</p>",unsafe_allow_html=True)
+    st.markdown("<p style='font-size:18px;'>Use the RPM slider to decide speed at which photoresist of desired thickness is coated (use the target thickness rpm recommender if unsure).</p>",unsafe_allow_html=True)
 
     rtype=st.selectbox("Resist",["AZ1505","PMMA"])
     base=3000 if rtype=="AZ1505" else 4000
@@ -177,7 +177,7 @@ with tab4:
 
     # STEP 3
     st.header("Step 3: Soft Bake")
-    st.markdown("<p style='font-size:18px;'>Heating reduces thickness</p>",unsafe_allow_html=True)
+    st.markdown("<p style='font-size:18px;'>Observe redusction of thickness.</p>",unsafe_allow_html=True)
 
     baked,red=prebake_effect(rtype,rthick)
 
@@ -198,6 +198,7 @@ Reduction: {red:.2f}%
 
     # STEP 4
     st.header("Step 4: Exposure")
+    st.markdown("<p style='font-size:18px;'>Choose desired pattern to be used as mask.</p>",unsafe_allow_html=True)
     pat=st.selectbox("Mask",["Lines","Dots","Square"])
     mask=generate_mask(size,pat)
 
@@ -220,7 +221,7 @@ Reduction: {red:.2f}%
 
     # STEP 5
     st.header("Step 5: Development")
-    st.markdown("<p style='font-size:18px;'>Pattern forms</p>",unsafe_allow_html=True)
+    st.markdown("<p style='font-size:18px;'>Developer (AZ3000MIF/Isopropanol) is used to develop the photoresist after exposure and the desired pattern is obtained.</p>",unsafe_allow_html=True)
 
     fig=go.Figure()
     fig.add_trace(create_block(0,0,1,1,0,200-si_cons,"red"))

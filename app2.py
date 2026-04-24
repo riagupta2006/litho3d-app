@@ -25,11 +25,10 @@ def create_block(x0, y0, dx, dy, z0, dz, color, opacity=1.0):
     )
 
 # -------------------------------
-# CENTERED MASK (FIXED)
+# MASK
 # -------------------------------
 def generate_mask(size, pattern):
     mask = np.zeros((size, size))
-
     center = size // 2
 
     if pattern == "Lines":
@@ -45,31 +44,6 @@ def generate_mask(size, pattern):
         mask[center-3:center+3, center-3:center+3] = 1
 
     return mask
-
-# -------------------------------
-# RPM SUGGESTION
-# -------------------------------
-def rpm_suggestion(resist_type):
-    st.subheader("Spin Coating Optimization")
-
-    if resist_type == "AZ1505":
-        base_rpm = 3000
-        ref_thickness = 500
-    else:
-        base_rpm = 4000
-        ref_thickness = 300
-
-    target_thickness = st.slider("Target Thickness (nm)", 100, 600, 200)
-
-    suggested_rpm = int(base_rpm * (ref_thickness / target_thickness))
-
-    st.markdown(f"""
-    **Suggested RPM:** `{suggested_rpm} rpm`
-
-    📌 Thickness ∝ 1 / RPM
-    """)
-
-    return base_rpm, ref_thickness
 
 # -------------------------------
 # PREBAKE
@@ -95,6 +69,7 @@ dx = 1 / size
 # STEP 0
 # -------------------------------
 st.header("Step 0: Silicon Substrate")
+st.caption("This is the base wafer. No input required here.")
 
 fig0 = go.Figure()
 fig0.add_trace(create_block(0,0,1,1,0,200,"red"))
@@ -104,10 +79,13 @@ st.plotly_chart(fig0, use_container_width=True)
 # STEP 1
 # -------------------------------
 st.header("Step 1: SiO₂ Growth (Thermal Oxidation)")
+st.caption("Adjust oxide thickness using the slider. Notice silicon is consumed during growth.")
 
 sio2_thickness = st.slider("SiO₂ Thickness (nm)", 100, 500, 200)
 
 si_consumed = 0.44 * sio2_thickness
+
+st.warning(f"Silicon Consumed: **{si_consumed:.2f} nm**")
 
 fig1 = go.Figure()
 fig1.add_trace(create_block(0,0,1,1,0,200 - si_consumed,"red"))
@@ -115,9 +93,10 @@ fig1.add_trace(create_block(0,0,1,1,200 - si_consumed,sio2_thickness,"blue"))
 st.plotly_chart(fig1, use_container_width=True)
 
 # -------------------------------
-# STEP 2: PHOTORESIST
+# STEP 2
 # -------------------------------
 st.header("Step 2: Photoresist Coating")
+st.caption("Select resist type, then adjust thickness or RPM to control coating.")
 
 resist_type = st.selectbox("Resist Type", ["AZ1505", "PMMA"])
 
@@ -135,17 +114,9 @@ rpm_max = int(base_rpm * (ref_thickness / 100))
 
 suggested_rpm = int(base_rpm * (ref_thickness / target_thickness))
 
-st.markdown(f"""
-**Suggested RPM:** `{suggested_rpm} rpm`  
-(Automatically matched to your target thickness)
-""")
+st.markdown(f"**Suggested RPM:** `{suggested_rpm} rpm`")
 
-rpm = st.slider(
-    "Spin Speed (RPM)",
-    rpm_min,
-    rpm_max,
-    suggested_rpm
-)
+rpm = st.slider("Spin Speed (RPM)", rpm_min, rpm_max, suggested_rpm)
 
 resist_thickness = ref_thickness * (base_rpm / rpm)
 
@@ -158,25 +129,21 @@ fig2.add_trace(create_block(
     0,0,1,1,
     200 - si_consumed + sio2_thickness,
     resist_thickness,
-    "yellow"
+    "orange"
 ))
 st.plotly_chart(fig2, use_container_width=True)
 
 # -------------------------------
-# STEP 2.5: PREBAKE
+# STEP 3
 # -------------------------------
-st.header("Step 2.5: Soft Bake (Pre-bake)")
+st.header("Step 3: Soft Bake (Pre-bake)")
+st.caption("Bake the coated wafer to remove solvents and stabilize the resist.")
 
 baked_thickness, reduction = prebake_effect(resist_type, resist_thickness)
 
 st.markdown(f"""
-**Soft Bake Conditions (Typical for AZ1505):**
-- Temperature: **90–100°C**
-- Time: **60–90 seconds**
-
-**Thickness Change:**
-- Before Bake: **{resist_thickness:.1f} nm**
-- After Bake: **{baked_thickness:.1f} nm**
+- Before Bake: **{resist_thickness:.1f} nm**  
+- After Bake: **{baked_thickness:.1f} nm**  
 - Reduction: **{reduction:.2f}%**
 """)
 
@@ -187,14 +154,15 @@ fig_pb.add_trace(create_block(
     0,0,1,1,
     200 - si_consumed + sio2_thickness,
     baked_thickness,
-    "orange"
+    "darkorange"
 ))
 st.plotly_chart(fig_pb, use_container_width=True)
 
 # -------------------------------
-# STEP 3: EXPOSURE
+# STEP 4
 # -------------------------------
-st.header("Step 3: Exposure")
+st.header("Step 4: Exposure")
+st.caption("Choose a mask pattern. Red regions are exposed to UV light.")
 
 pattern = st.selectbox("Mask Pattern", ["Lines", "Dots", "Square"])
 mask = generate_mask(size, pattern)
@@ -208,7 +176,7 @@ for i in range(size):
         x0, y0 = i*dx, j*dx
         exposed = mask[i,j] == 1
 
-        color = "red" if exposed else "orange"
+        color = "red" if exposed else "darkorange"
 
         fig3.add_trace(create_block(
             x0, y0, dx, dx,
@@ -229,9 +197,10 @@ for i in range(size):
 st.plotly_chart(fig3, use_container_width=True)
 
 # -------------------------------
-# STEP 4: DEVELOPMENT
+# STEP 5
 # -------------------------------
-st.header("Step 4: Development")
+st.header("Step 5: Development")
+st.caption("Unexposed regions remain (positive resist). Pattern becomes visible.")
 
 fig4 = go.Figure()
 fig4.add_trace(create_block(0,0,1,1,0,200 - si_consumed,"red"))

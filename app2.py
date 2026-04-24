@@ -180,36 +180,80 @@ with tab4:
     fig2.add_trace(create_block(0,0,1,1,200-si_consumed+sio2_thickness,resist_thickness,"orange"))
     st.plotly_chart(fig2, use_container_width=True)
 
-    st.header("Step 3: Soft Bake")
-    st.markdown("<p style='font-size:18px;'>Observe thickness reduction after heating.</p>", unsafe_allow_html=True)
+st.header("Step 3: Soft Bake")
+st.markdown("<p style='font-size:18px;'>Observe thickness reduction after heating.</p>", unsafe_allow_html=True)
 
-    baked_thickness,_ = prebake_effect(resist_type,resist_thickness)
+baked_thickness, reduction = prebake_effect(resist_type, resist_thickness)
 
-    fig_pb = go.Figure()
-    fig_pb.add_trace(create_block(0,0,1,1,0,200-si_consumed,"red"))
-    fig_pb.add_trace(create_block(0,0,1,1,200-si_consumed,sio2_thickness,"blue"))
-    fig_pb.add_trace(create_block(0,0,1,1,200-si_consumed+sio2_thickness,baked_thickness,"darkorange"))
-    st.plotly_chart(fig_pb, use_container_width=True)
+st.markdown(f"""
+**Soft Bake Conditions (Typical for AZ1505):**
+- Temperature: **90–100°C**
+- Time: **60–90 seconds**
 
-    st.header("Step 4: Exposure")
-    st.markdown("<p style='font-size:18px;'>Choose mask and observe UV exposure.</p>", unsafe_allow_html=True)
+**Thickness Change:**
+- Before Bake: **{resist_thickness:.1f} nm**
+- After Bake: **{baked_thickness:.1f} nm**
+- Reduction: **{reduction:.2f}%**
+""")
 
-    pattern = st.selectbox("Mask Pattern", ["Lines","Dots","Square"])
-    mask = generate_mask(size,pattern)
+fig_pb = go.Figure()
+fig_pb.add_trace(create_block(0,0,1,1,0,200-si_consumed,"red"))
+fig_pb.add_trace(create_block(0,0,1,1,200-si_consumed,sio2_thickness,"blue"))
+fig_pb.add_trace(create_block(
+    0,0,1,1,
+    200-si_consumed+sio2_thickness,
+    baked_thickness,
+    "orangered"
+))
+st.plotly_chart(fig_pb, use_container_width=True)
 
-    fig3 = go.Figure()
-    fig3.add_trace(create_block(0,0,1,1,0,200-si_consumed,"red"))
-    fig3.add_trace(create_block(0,0,1,1,200-si_consumed,sio2_thickness,"blue"))
 
-    for i in range(size):
-        for j in range(size):
-            if mask[i,j]==0:
-                fig3.add_trace(create_block(i*dx,j*dx,dx,dx,200-si_consumed+sio2_thickness,baked_thickness,"darkorange"))
+for i in range(size):
+    for j in range(size):
+        x0, y0 = i*dx, j*dx
+        exposed = mask[i,j] == 1
 
-    st.plotly_chart(fig3, use_container_width=True)
+        color = "red" if exposed else "orangered"
 
-    st.header("Step 5: Development")
-    st.markdown("<p style='font-size:18px;'>Final pattern appears.</p>", unsafe_allow_html=True)
+        fig3.add_trace(create_block(
+            x0, y0, dx, dx,
+            200-si_consumed+sio2_thickness,
+            baked_thickness,
+            color
+        ))
+
+        # ---- UV LIGHT (RESTORED) ----
+        if exposed:
+            fig3.add_trace(create_block(
+                x0, y0, dx, dx,
+                200-si_consumed+sio2_thickness+baked_thickness,
+                200,
+                "yellow",
+                opacity=0.2
+            ))
+
+
+st.header("Step 5: Development")
+st.markdown("<p style='font-size:18px;'>Unexposed regions remain while exposed regions are removed, forming the final pattern.</p>", unsafe_allow_html=True)
+
+fig4 = go.Figure()
+fig4.add_trace(create_block(0,0,1,1,0,200-si_consumed,"red"))
+fig4.add_trace(create_block(0,0,1,1,200-si_consumed,sio2_thickness,"blue"))
+
+for i in range(size):
+    for j in range(size):
+        if mask[i,j] == 0:
+            x0, y0 = i*dx, j*dx
+
+            fig4.add_trace(create_block(
+                x0, y0, dx, dx,
+                200-si_consumed+sio2_thickness,
+                baked_thickness,
+                "green"
+            ))
+
+st.plotly_chart(fig4, use_container_width=True)
+
 
 # -------------------------------
 # QUIZ

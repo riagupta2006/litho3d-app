@@ -230,81 +230,69 @@ Reduction: {red:.2f}%
                 fig.add_trace(create_block(i*dx,j*dx,dx,dx,200-si_cons+sio2,baked,"green"))
 
     st.plotly_chart(fig)
+    st.success("Simulation Successfully Completed!")
 
-# -------------------------------
-# QUIZ
-# -------------------------------
 # -------------------------------
 # QUIZ
 # -------------------------------
 with tab5:
     st.header("Quiz")
 
-    score = 0
-
-    # Q1
+    # Questions (no evaluation yet)
     q1 = st.radio(
         "1. During thermal oxidation, what fraction of SiO₂ thickness comes from consumed silicon?",
-        ["~20%", "~44%", "~70%", "~100%"]
+        ["~20%", "~44%", "~70%", "~100%"],
+        key="q1"
     )
-    if q1 == "~44%":
-        st.success("Correct!")
-        score += 1
-    else:
-        st.error("Incorrect. About 44% comes from silicon consumption.")
 
-    # Q2
     q2 = st.radio(
         "2. What is the relationship between spin speed (RPM) and photoresist thickness?",
-        ["t ∝ RPM", "t ∝ 1/RPM", "t ∝ 1/√RPM", "t ∝ √RPM"]
+        ["t ∝ RPM", "t ∝ 1/RPM", "t ∝ 1/√RPM", "t ∝ √RPM"],
+        key="q2"
     )
-    if q2 == "t ∝ 1/√RPM":
-        st.success("Correct!")
-        score += 1
-    else:
-        st.error("Incorrect. Thickness follows inverse square root relation.")
 
-    # Q3
     q3 = st.radio(
         "3. What is the main purpose of soft bake?",
-        ["Grow oxide", "Remove solvent", "Etch silicon", "Increase exposure"]
+        ["Grow oxide", "Remove solvent", "Etch silicon", "Increase exposure"],
+        key="q3"
     )
-    if q3 == "Remove solvent":
-        st.success("Correct!")
-        score += 1
-    else:
-        st.error("Incorrect. Soft bake removes solvent and stabilizes resist.")
 
-    # Q4
     q4 = st.radio(
         "4. In positive photoresist, what happens to exposed regions?",
-        ["They harden", "They become insoluble", "They become more soluble", "Nothing happens"]
+        ["They harden", "They become insoluble", "They become more soluble", "Nothing happens"],
+        key="q4"
     )
-    if q4 == "They become more soluble":
-        st.success("Correct!")
-        score += 1
-    else:
-        st.error("Incorrect. Exposure increases solubility.")
 
-    # Q5
     q5 = st.radio(
         "5. Which developer is used for AZ1505?",
-        ["Water", "Acetone", "AZ3000MIF", "Isopropanol"]
+        ["Water", "Acetone", "AZ3000MIF", "Isopropanol"],
+        key="q5"
     )
-    if q5 == "AZ3000MIF":
-        st.success("Correct!")
-        score += 1
-    else:
-        st.error("Incorrect. AZ3000MIF is used.")
 
-    # Final Score
-    st.markdown("---")
-    st.subheader(f"Your Score: {score}/5")
+    # Submit button
+    if st.button("Submit Quiz"):
 
-    if score == 5:
-        st.balloons()
-        st.success("Excellent! You have a strong understanding of photolithography.")
-    elif score >= 3:
-        st.info("Good job! Review a few concepts to improve further.")
-    else:
-        st.warning("Revise the theory and try again.")
+        score = 0
+
+        if q1 == "~44%":
+            score += 1
+        if q2 == "t ∝ 1/√RPM":
+            score += 1
+        if q3 == "Remove solvent":
+            score += 1
+        if q4 == "They become more soluble":
+            score += 1
+        if q5 == "AZ3000MIF":
+            score += 1
+
+        st.markdown("---")
+        st.subheader(f"Your Score: {score}/5")
+
+        # Feedback AFTER submission
+        if score == 5:
+            st.balloons()
+            st.success("Excellent! You have a strong understanding of photolithography.")
+        elif score >= 3:
+            st.info("Good job! Review a few concepts to improve further.")
+        else:
+            st.warning("Revise the theory and try again.")

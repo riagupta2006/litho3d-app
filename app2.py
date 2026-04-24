@@ -53,7 +53,9 @@ k is a resist-specific constant calibrated to yield ~0.5 µm at 4000 RPM.
 Photoresist is heated at 90–100°C for 60–90 seconds in order to:
 
 i)   Remove excess solvent from photoresist coating.
+
 ii)  Increase adhesion of photoresist to the underlying material (SiO2).
+
 iii) Reduce contamination and mask damage.
 
 Temperatures above 110°C risk thermally degrading the Photoactive Compound (PAC). 

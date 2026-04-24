@@ -120,12 +120,12 @@ with tab4:
         if pattern=="Lines":
             for j in range(-2,3,2):
                 mask[:,c+j]=1
-elif pattern == "Dots":
-    radius = size // 10
-    for i in range(size):
-        for j in range(size):
-            if (i - center)**2 + (j - center)**2 <= radius**2:
-                mask[i, j] = 1
+        elif pattern == "Dots":
+            radius = size // 10
+            for i in range(size):
+                for j in range(size):
+                    if (i - center)**2 + (j - center)**2 <= radius**2:
+                        mask[i, j] = 1
         else:
             mask[c-3:c+3,c-3:c+3]=1
         return mask

@@ -51,8 +51,9 @@ k is a resist-specific constant calibrated to yield ~0.5 µm at 4000 RPM.
     st.subheader("Soft Bake")
     st.markdown("""
 Photoresist is heated at 90–100°C for 60–90 seconds in order to:
-i) Remove excess solvent from photoresist coating.
-ii) Increase adhesion of photoresist to the underlying material (SiO2).
+
+i)   Remove excess solvent from photoresist coating.
+ii)  Increase adhesion of photoresist to the underlying material (SiO2).
 iii) Reduce contamination and mask damage.
 
 Temperatures above 110°C risk thermally degrading the Photoactive Compound (PAC). 
@@ -62,7 +63,9 @@ Temperatures above 140°C cause the resist to cross-link and char, rendering it 
     st.subheader("Exposure")
     st.markdown("""
 UV light (wavelength of 365nm) is passed through the mask chosen.
+
 When certain areas are exposed to UV light, photoresist becomes soluble in developer in those areas.
+
 During exposure, ultraviolet (UV) light is passed through a mask onto the photoresist.  
 In positive photoresist (AZ1505 and PMMA), exposed regions undergo chemical changes that increase their solubility in the developer.  
 The intensity and duration of exposure determine the resolution and accuracy of the transferred pattern.

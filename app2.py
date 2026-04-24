@@ -158,7 +158,7 @@ fig2.add_trace(create_block(
     0,0,1,1,
     200 - si_consumed + sio2_thickness,
     resist_thickness,
-    "orange"
+    "yellow"
 ))
 st.plotly_chart(fig2, use_container_width=True)
 
@@ -187,7 +187,7 @@ fig_pb.add_trace(create_block(
     0,0,1,1,
     200 - si_consumed + sio2_thickness,
     baked_thickness,
-    "orangered"
+    "orange"
 ))
 st.plotly_chart(fig_pb, use_container_width=True)
 
@@ -208,7 +208,7 @@ for i in range(size):
         x0, y0 = i*dx, j*dx
         exposed = mask[i,j] == 1
 
-        color = "red" if exposed else "orangered"
+        color = "red" if exposed else "orange"
 
         fig3.add_trace(create_block(
             x0, y0, dx, dx,

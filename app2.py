@@ -137,7 +137,7 @@ with tab4:
 
     # STEP 0
     st.header("Step 0: Silicon substrate is taken")
-    st.markdown("<p style='font-size:18px;'>Base wafer of 200nm is taken and cleaned by following the rca procedures.</p>",unsafe_allow_html=True)
+    st.markdown("<p style='font-size:18px;'>Base wafer of 200nm is taken and cleaned by following the RCA procedures.</p>",unsafe_allow_html=True)
     fig=go.Figure()
     fig.add_trace(create_block(0,0,1,1,0,200,"red"))
     st.plotly_chart(fig)

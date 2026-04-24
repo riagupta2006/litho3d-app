@@ -88,7 +88,14 @@ Developer used:
 with tab3:
     st.header("Procedure")
     st.markdown("""
-Follow simulation steps. Adjust oxide thickness, select resist, tune RPM, observe bake, exposure, and development.
+1. Navigate the simulation tab.
+2. Observe the Silicon substrate to be operated on.
+3. Adjust the slider to the desired amount of growth required and observe how much silicon gets consumed.
+4. Choose the preferred positive photoresist.
+5. Select preferred thickness of photoresist if unsure of spin speed of spin coater. The suggested RPM is automatically selected.
+6. Observe the reduction in thickness of photoresist as it is heated during the Soft Bake process.
+7. Choose the desired mask and observe how the photoresist is exposed to the UV light.
+8. The simulation is concluded with the develpment process where the required pattern is created on the photoresist.
 """)
 
 # -------------------------------

@@ -97,19 +97,21 @@ dx = 1 / size
 st.header("Step 0: Silicon Substrate")
 
 fig0 = go.Figure()
-fig0.add_trace(create_block(0,0,1,1,0,200,"gray"))
+fig0.add_trace(create_block(0,0,1,1,0,200,"red"))
 st.plotly_chart(fig0, use_container_width=True)
 
 # -------------------------------
 # STEP 1
 # -------------------------------
-st.header("Step 1: SiO₂ Deposition")
+st.header("Step 1: SiO₂ Growth (Thermal Oxidation)")
 
 sio2_thickness = st.slider("SiO₂ Thickness (nm)", 100, 500, 200)
 
+si_consumed = 0.44 * sio2_thickness
+
 fig1 = go.Figure()
-fig1.add_trace(create_block(0,0,1,1,0,200,"gray"))
-fig1.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
+fig1.add_trace(create_block(0,0,1,1,0,200 - si_consumed,"red"))
+fig1.add_trace(create_block(0,0,1,1,200 - si_consumed,sio2_thickness,"blue"))
 st.plotly_chart(fig1, use_container_width=True)
 
 # -------------------------------
@@ -119,7 +121,6 @@ st.header("Step 2: Photoresist Coating")
 
 resist_type = st.selectbox("Resist Type", ["AZ1505", "PMMA"])
 
-# base parameters
 if resist_type == "AZ1505":
     base_rpm = 3000
     ref_thickness = 500
@@ -127,14 +128,11 @@ else:
     base_rpm = 4000
     ref_thickness = 300
 
-# ---- TARGET THICKNESS ----
 target_thickness = st.slider("Target Thickness (nm)", 100, 600, 200)
 
-# ---- COMPUTE RPM RANGE FROM THICKNESS RANGE ----
-rpm_min = int(base_rpm * (ref_thickness / 600))   # thickest film → lowest rpm
-rpm_max = int(base_rpm * (ref_thickness / 100))   # thinnest film → highest rpm
+rpm_min = int(base_rpm * (ref_thickness / 600))
+rpm_max = int(base_rpm * (ref_thickness / 100))
 
-# ---- SUGGESTED RPM ----
 suggested_rpm = int(base_rpm * (ref_thickness / target_thickness))
 
 st.markdown(f"""
@@ -142,7 +140,6 @@ st.markdown(f"""
 (Automatically matched to your target thickness)
 """)
 
-# ---- RPM SLIDER (NOW CONSISTENT) ----
 rpm = st.slider(
     "Spin Speed (RPM)",
     rpm_min,
@@ -150,20 +147,16 @@ rpm = st.slider(
     suggested_rpm
 )
 
-# ---- RESULTING THICKNESS ----
 resist_thickness = ref_thickness * (base_rpm / rpm)
 
 st.write(f"**Achieved Thickness:** {resist_thickness:.1f} nm")
 
-# -------------------------------
-# PLOT
-# -------------------------------
 fig2 = go.Figure()
-fig2.add_trace(create_block(0,0,1,1,0,200,"gray"))
-fig2.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
+fig2.add_trace(create_block(0,0,1,1,0,200 - si_consumed,"red"))
+fig2.add_trace(create_block(0,0,1,1,200 - si_consumed,sio2_thickness,"blue"))
 fig2.add_trace(create_block(
     0,0,1,1,
-    200+sio2_thickness,
+    200 - si_consumed + sio2_thickness,
     resist_thickness,
     "orange"
 ))
@@ -188,13 +181,13 @@ st.markdown(f"""
 """)
 
 fig_pb = go.Figure()
-fig_pb.add_trace(create_block(0,0,1,1,0,200,"gray"))
-fig_pb.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
+fig_pb.add_trace(create_block(0,0,1,1,0,200 - si_consumed,"red"))
+fig_pb.add_trace(create_block(0,0,1,1,200 - si_consumed,sio2_thickness,"blue"))
 fig_pb.add_trace(create_block(
     0,0,1,1,
-    200 + sio2_thickness,
+    200 - si_consumed + sio2_thickness,
     baked_thickness,
-    "darkorange"
+    "orangered"
 ))
 st.plotly_chart(fig_pb, use_container_width=True)
 
@@ -207,19 +200,19 @@ pattern = st.selectbox("Mask Pattern", ["Lines", "Dots", "Square"])
 mask = generate_mask(size, pattern)
 
 fig3 = go.Figure()
-fig3.add_trace(create_block(0,0,1,1,0,200,"gray"))
-fig3.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
+fig3.add_trace(create_block(0,0,1,1,0,200 - si_consumed,"red"))
+fig3.add_trace(create_block(0,0,1,1,200 - si_consumed,sio2_thickness,"blue"))
 
 for i in range(size):
     for j in range(size):
         x0, y0 = i*dx, j*dx
         exposed = mask[i,j] == 1
 
-        color = "red" if exposed else "darkorange"
+        color = "red" if exposed else "orangered"
 
         fig3.add_trace(create_block(
             x0, y0, dx, dx,
-            200 + sio2_thickness,
+            200 - si_consumed + sio2_thickness,
             baked_thickness,
             color
         ))
@@ -227,7 +220,7 @@ for i in range(size):
         if exposed:
             fig3.add_trace(create_block(
                 x0, y0, dx, dx,
-                200 + sio2_thickness + baked_thickness,
+                200 - si_consumed + sio2_thickness + baked_thickness,
                 200,
                 "yellow",
                 opacity=0.2
@@ -241,8 +234,8 @@ st.plotly_chart(fig3, use_container_width=True)
 st.header("Step 4: Development")
 
 fig4 = go.Figure()
-fig4.add_trace(create_block(0,0,1,1,0,200,"gray"))
-fig4.add_trace(create_block(0,0,1,1,200,sio2_thickness,"blue"))
+fig4.add_trace(create_block(0,0,1,1,0,200 - si_consumed,"red"))
+fig4.add_trace(create_block(0,0,1,1,200 - si_consumed,sio2_thickness,"blue"))
 
 for i in range(size):
     for j in range(size):
@@ -251,7 +244,7 @@ for i in range(size):
 
             fig4.add_trace(create_block(
                 x0, y0, dx, dx,
-                200 + sio2_thickness,
+                200 - si_consumed + sio2_thickness,
                 baked_thickness,
                 "green"
             ))

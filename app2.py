@@ -144,10 +144,7 @@ with tab4:
 
     # STEP 1
     st.header("Step 1: SiO₂ Growth on Silicon Substrate")
-    st.markdown("<p style='font-size:18px;'>
-    Thickness of SiO2 is decided by understanding growth rates determined by temperature and time.
-    SiO2 is grown by consuming 44% of underlying Silicon.</p>",unsafe_allow_html=True)
-
+    st.markdown("<p style='font-size:18px;'>Thickness of SiO2 is decided by understanding growth rates determined by temperature and time. SiO2 is grown by consuming 44% of underlying Silicon.</p>",unsafe_allow_html=True)
     sio2=st.slider("Thickness",100,500,200)
     si_cons=0.44*sio2
     st.warning(f"Silicon Consumed: {si_cons:.2f} nm")
